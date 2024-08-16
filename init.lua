@@ -187,6 +187,15 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
+-- slap a timestamp at the end of the line, relies on numToStr/Comment.nvim --[[ 2024-08-15 21:31:58 ]]
+-- stylua: ignore
+vim.keymap.set(
+	'n',
+	'<leader>ts',
+	"A<space><C-r>=strftime('%Y-%m-%d %H:%M:%S')<CR><Esc>2B<Plug>(comment_toggle_linewise)$",
+	{ desc = 'Append [t]ime[s]tamp' }
+)
+
 -- TIP: Disable arrow keys in normal mode
 -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
 -- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
@@ -326,15 +335,6 @@ require('lazy').setup({
 
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
-
-  -- slap a timestamp at the end of the line, relies on numToStr/Comment.nvim --[[ 2024-08-15 21:31:58 ]]
-  -- stylua: ignore
-  vim.keymap.set(
-    'n',
-    '<leader>ts',
-    "A<space><C-r>=strftime('%Y-%m-%d %H:%M:%S')<CR><Esc>2B<Plug>(comment_toggle_linewise)$",
-    { desc = 'Append [t]ime[s]tamp' }
-  )
 
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
