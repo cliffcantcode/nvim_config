@@ -164,14 +164,13 @@ vim.opt.inccommand = 'split'
 -- Show which line your cursor is on
 vim.opt.cursorline = false
 
--- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 10
+-- Minimal number of screen lines to keep above and below the cursor; 999 to stay centered.
+vim.opt.scrolloff = 999
 
--- [[ Basic Keymaps ]]
+-- [[ BASIC KEYMAPS ]]
 --  See `:help vim.keymap.set()`
 
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
-vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
@@ -189,8 +188,8 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- TIP: Disable arrow keys in normal mode
-vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
-vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
+-- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
+-- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
 --vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
 --vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
@@ -249,11 +248,50 @@ vim.opt.rtp:prepend(lazypath)
 --    :Lazy update
 --
 -- NOTE: Here is where you install your plugins.
+-- [[ PLUGINS ]]
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
   'tpope/vim-unimpaired', -- pairs of handy bracket mappings
   --'tpope/vim-sensible', -- defaults everyone can agree on
+
+  {
+    'folke/flash.nvim',
+    event = 'VeryLazy',
+    ---@type Flash.Config
+    opts = {},
+  -- stylua: ignore
+  keys = {
+    { ",s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
+    -- { ",S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
+    -- { ",r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
+    -- { ",R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
+    -- { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
+  },
+  },
+
+  -- centers text for writing (:Goyo, :Goyo! for on, off)
+  'junegunn/goyo.vim',
+
+  -- scroll smoothly instead of jumping to a place
+  'joeytwiddle/sexy_scroller.vim', -- helps with spatial recognition
+  {
+    'karb94/neoscroll.nvim', -- smooths regular scroll mostions (ex: CTRL-E, CTRL-Y)
+    config = function()
+      require('neoscroll').setup { easing = 'quadratic' }
+    end,
+  },
+
+  -- custom quick swapping of common terms (ex: true -> false, 0 -> 1, {} -> {};)
+  'AndrewRadev/switch.vim',
+
+  -- highlight unique character to make t/T/f/F jumping easier
+  -- {
+  --   'jinh0/eyeliner.nvim',
+  --   config = function()
+  --     require('eyeliner').setup {}
+  --   end,
+  -- },
 
   -- Multiple cursor because I have vim skill issues
   {
@@ -288,6 +326,15 @@ require('lazy').setup({
 
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
+
+  -- slap a timestamp at the end of the line, relies on numToStr/Comment.nvim --[[ 2024-08-15 21:31:58 ]]
+  -- stylua: ignore
+  vim.keymap.set(
+    'n',
+    '<leader>ts',
+    "A<space><C-r>=strftime('%Y-%m-%d %H:%M:%S')<CR><Esc>2B<Plug>(comment_toggle_linewise)$",
+    { desc = 'Append [t]ime[s]tamp' }
+  )
 
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
@@ -445,8 +492,8 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>/', function()
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-          winblend = 10,
-          previewer = false,
+          winblend = 18,
+          previewer = true,
         })
       end, { desc = '[/] Fuzzily search in current buffer' })
 
@@ -642,7 +689,7 @@ require('lazy').setup({
         -- gopls = {},
         -- pyright = {},
         rust_analyzer = {},
-        zls = {},
+        zls = { cmd = { '/Users/cliffordregister/bin/zls/zig-out/bin/zls' } },
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -726,6 +773,7 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        zig = { 'zig fmt' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -883,6 +931,9 @@ require('lazy').setup({
           color = '#44BB44',
           alt = { 'START', 'CONTINUE' },
         },
+        DRY = {
+          color = '#964B00',
+        },
       },
     },
   },
@@ -904,7 +955,6 @@ require('lazy').setup({
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup()
-
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
       --  and try some other statusline plugin
@@ -920,6 +970,26 @@ require('lazy').setup({
         return '%2l:%-2v'
       end
 
+      -- if primary lsp fails this gives better-than-nothing completion
+      require('mini.completion').setup()
+
+      -- glyph style icons
+      require('mini.icons').setup()
+
+      -- TODO: I think I like this better but idk where the \ mapping is currently
+      -- require('mini.files').setup()
+
+      -- TODO: not sure if I like this one
+      -- highlights possible jumps
+      -- require('mini.jump').setup()
+      -- require('mini.jump2d').setup()
+
+      -- flattens or stacks scoped lists of items with gS
+      require('mini.splitjoin').setup()
+
+      -- animates visual line for the scope you're in
+      require('mini.indentscope').setup()
+
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
@@ -928,7 +998,21 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'bash', 'c', 'rust', 'zig', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc' },
+      ensure_installed = {
+        'bash',
+        'c',
+        'rust',
+        'zig',
+        'diff',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'query',
+        'vim',
+        'vimdoc',
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -1002,4 +1086,4 @@ require('lazy').setup({
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
--- vim: ts=2 sts=2 sw=2 et
+-- vim: ts=2 sts=2 sw=2
