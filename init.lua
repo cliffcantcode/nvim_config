@@ -99,6 +99,9 @@ vim.g.have_nerd_font = true
 -- NOTE: You can change these options as you wish!
 --  For more options, you can see `:help option-list`
 
+-- add branch styling to the directory view
+vim.cmd 'let g:netrw_liststyle = 3'
+
 -- Make line numbers default
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
@@ -187,15 +190,6 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
--- slap a timestamp at the end of the line, relies on numToStr/Comment.nvim --[[ 2024-08-15 21:31:58 ]]
--- stylua: ignore
-vim.keymap.set(
-	'n',
-	'<leader>ts',
-	"A<space><C-r>=strftime('%Y-%m-%d %H:%M:%S')<CR><Esc>2B<Plug>(comment_toggle_linewise)$",
-	{ desc = 'Append [t]ime[s]tamp' }
-)
-
 -- TIP: Disable arrow keys in normal mode
 -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
 -- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
@@ -259,48 +253,18 @@ vim.opt.rtp:prepend(lazypath)
 -- NOTE: Here is where you install your plugins.
 -- [[ PLUGINS ]]
 require('lazy').setup({
+  -- TODO: does this do anything?
+  ui = {
+    border = 'single',
+    size = {
+      width = 0.8,
+      height = 0.9,
+    },
+  },
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
   'tpope/vim-unimpaired', -- pairs of handy bracket mappings
   --'tpope/vim-sensible', -- defaults everyone can agree on
-
-  {
-    'folke/flash.nvim',
-    event = 'VeryLazy',
-    ---@type Flash.Config
-    opts = {},
-  -- stylua: ignore
-  keys = {
-    { ",s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
-    -- { ",S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
-    -- { ",r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
-    -- { ",R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
-    -- { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
-  },
-  },
-
-  -- centers text for writing (:Goyo, :Goyo! for on, off)
-  'junegunn/goyo.vim',
-
-  -- scroll smoothly instead of jumping to a place
-  'joeytwiddle/sexy_scroller.vim', -- helps with spatial recognition
-  {
-    'karb94/neoscroll.nvim', -- smooths regular scroll mostions (ex: CTRL-E, CTRL-Y)
-    config = function()
-      require('neoscroll').setup { easing = 'quadratic' }
-    end,
-  },
-
-  -- custom quick swapping of common terms (ex: true -> false, 0 -> 1, {} -> {};)
-  'AndrewRadev/switch.vim',
-
-  -- highlight unique character to make t/T/f/F jumping easier
-  -- {
-  --   'jinh0/eyeliner.nvim',
-  --   config = function()
-  --     require('eyeliner').setup {}
-  --   end,
-  -- },
 
   -- Multiple cursor because I have vim skill issues
   {
@@ -321,20 +285,10 @@ require('lazy').setup({
     },
   },
 
-  -- Open files where you left off
-  'farmergreg/vim-lastplace',
-
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
   -- keys can be used to configure plugin behavior/loading/etc.
   --
-  -- Use `opts = {}` to force a plugin to be loaded.
-  --
-  --  This is equivalent to:
-  --    require('Comment').setup({})
-
-  -- "gc" to comment visual regions/lines
-  { 'numToStr/Comment.nvim', opts = {} },
 
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
@@ -414,6 +368,8 @@ require('lazy').setup({
     branch = '0.1.x',
     dependencies = {
       'nvim-lua/plenary.nvim',
+      'debugloop/telescope-undo.nvim',
+      'folke/todo-comments.nvim',
       { -- If encountering errors, see telescope-fzf-native README for installation instructions
         'nvim-telescope/telescope-fzf-native.nvim',
 
@@ -474,6 +430,7 @@ require('lazy').setup({
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
+      pcall(require('telescope').load_extension, 'undo')
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
@@ -485,6 +442,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
+      vim.keymap.set('n', '<leader>st', '<cmd>TodoTelescope<cr>', { desc = '[S]earch [T]odo comments' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
@@ -510,6 +468,8 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sn', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = '[S]earch [N]eovim files' })
+
+      vim.keymap.set('n', '<leader>u', '<CMD>Telescope undo<CR>', { desc = '[U]ndo tree' })
     end,
   },
 
@@ -689,7 +649,7 @@ require('lazy').setup({
         -- gopls = {},
         -- pyright = {},
         rust_analyzer = {},
-        zls = { cmd = { '/Users/cliffordregister/bin/zls/zig-out/bin/zls' } },
+        zls = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -721,7 +681,11 @@ require('lazy').setup({
       --    :Mason
       --
       --  You can press `g?` for help in this menu.
-      require('mason').setup()
+      require('mason').setup {
+        ui = {
+          border = 'rounded',
+        },
+      }
 
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
@@ -812,13 +776,15 @@ require('lazy').setup({
           -- },
         },
       },
-      'saadparwaiz1/cmp_luasnip',
+      'rafamadriz/friendly-snippets', -- useful snippets
+      'saadparwaiz1/cmp_luasnip', -- autocompletion
 
       -- Adds other completion capabilities.
       --  nvim-cmp does not ship with all sources by default. They are split
       --  into multiple repos for maintenance purposes.
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
+      'hrsh7th/cmp-buffer',
     },
     config = function()
       -- See `:help cmp`
@@ -900,9 +866,11 @@ require('lazy').setup({
     -- change the command in the config to whatever the name of that colorscheme is.
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
+    -- 'folke/tokyonight.nvim',
+    'catppuccin/nvim',
+    name = 'catppuccin',
     opts = {
-      transparent = true,
+      transparent_background = true,
       styles = {
         sidebars = 'transparent',
         floats = 'transparent',
@@ -913,8 +881,7 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
-
+      vim.cmd.colorscheme 'catppuccin-macchiato'
       -- You can configure highlights by doing something like:
       vim.cmd.hi 'Comment gui=none'
     end,
@@ -936,6 +903,19 @@ require('lazy').setup({
         },
       },
     },
+    config = function()
+      local todo_comments = require 'todo-comments'
+
+      vim.keymap.set('n', '<leader>[t', function()
+        todo_comments.jump_prev()
+      end, { desc = 'Previous TODO comment' })
+
+      vim.keymap.set('n', '<leader>]t', function()
+        todo_comments.jump_next()
+      end, { desc = 'Next TODO comment' })
+
+      todo_comments.setup()
+    end,
   },
 
   { -- Collection of various small independent plugins/modules
@@ -971,13 +951,10 @@ require('lazy').setup({
       end
 
       -- if primary lsp fails this gives better-than-nothing completion
-      require('mini.completion').setup()
+      -- require('mini.completion').setup()
 
       -- glyph style icons
       require('mini.icons').setup()
-
-      -- TODO: I think I like this better but idk where the \ mapping is currently
-      -- require('mini.files').setup()
 
       -- TODO: not sure if I like this one
       -- highlights possible jumps
@@ -996,6 +973,7 @@ require('lazy').setup({
   },
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
+    events = { 'BufReadPre', 'BufNewFile' },
     build = ':TSUpdate',
     opts = {
       ensure_installed = {
@@ -1054,7 +1032,7 @@ require('lazy').setup({
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
-  require 'kickstart.plugins.neo-tree',
+  -- require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
