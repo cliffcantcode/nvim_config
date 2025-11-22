@@ -5,8 +5,9 @@ M.replacements = {
   ["resctangle"] = "rectangle",
   ["Resctangle"] = "Rectangle",
   ["Spaceing"] = "Spacing",
-  ["Backgroun "] = "Background ",
-  ["backgroun "] = "background ",
+  -- We need to avoid things like (backgroun => background => backgroundd).
+  ["Backgroun(%f[%s])"] = "Background%1",
+  ["backgroun(%f[%s])"] = "background%1",
 }
 
 M.filetype_replacements = {
@@ -17,8 +18,7 @@ M.filetype_replacements = {
   ["Hight"] = "High",
   },
   zig = {
-  -- TODO: Make this more targeted, (context -> constext)
-  -- ["cont"] = "const",
+  ["%f[%w]cont%f[%s]"] = "const",
   },
 }
 
