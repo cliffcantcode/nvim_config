@@ -29,7 +29,7 @@ vim.keymap.set('n', '<right>', ':bnext<CR>', { desc = 'Move to the next buffer' 
 
 -- Run the project's build script. Change this to match the desired project's build script
 vim.keymap.set('n', ',b', ':w<CR> :!P:\\handmade\\code\\build.bat<CR>', { desc = 'Run [b]uild script.' })
-vim.keymap.set('n', ',z', ':w<CR> :!zig build run --dev<CR>', { desc = 'Run the [z]ig build script.' })
+vim.keymap.set('n', ',z', ':w<CR> :!zig build run -Ddev<CR>', { desc = 'Run the [z]ig build script.' })
 
 -- Source the current buffer
 vim.keymap.set('n', ',s', ':w<CR> :source ' .. vim.fn.stdpath('config') .. '/init.lua<CR>',
