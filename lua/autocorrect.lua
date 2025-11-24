@@ -1,6 +1,5 @@
 local M = {}
 
--- TODO: Make this work well for replacements that make words longer rather than shorter when the change is on the final character (backgroun => background => backgroundd).
 M.replacements = {
   ["resctangle"] = "rectangle",
   ["Resctangle"] = "Rectangle",
