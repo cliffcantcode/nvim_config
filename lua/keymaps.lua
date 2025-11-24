@@ -32,7 +32,7 @@ vim.keymap.set('n', ',b', ':w<CR> :!P:\\handmade\\code\\build.bat<CR>', { desc =
 vim.keymap.set('n', ',z', ':w<CR> :!zig build run<CR>', { desc = 'Run the [z]ig build script.' })
 
 -- Source the current buffer
-vim.keymap.set('n', ',s', ':w<CR> :source "C:\\Users\\cliff\\AppData\\Local\\nvim\\init.lua"<CR>',
+vim.keymap.set('n', ',s', ':w<CR> :source ' .. vim.fn.stdpath('config') .. '/init.lua<CR>',
   { desc = '[s]ource the init.lua changes.' })
 
 -- Replace word with what's in the clipboard.
