@@ -60,7 +60,6 @@ vim.keymap.set('n', 'G', function()
 end, opts)
 
 smooth_command('u', 'u')
-smooth_command('<C-r>', '<C-r>')
 
 return M
 
