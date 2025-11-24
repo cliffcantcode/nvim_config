@@ -27,6 +27,27 @@ end
 
 local opts = { noremap = true, silent = true }
 
+local function smooth_command(lhs, rhs_keys)
+    vim.keymap.set('n', lhs, function()
+        local win = 0
+        local count = vim.v.count1
+
+        -- starting position
+        local start_pos = vim.api.nvim_win_get_cursor(win)
+
+        -- perform the real command (undo/redo/etc.)
+        vim.cmd('normal! ' .. count .. rhs_keys)
+
+        -- position after command
+        local target_pos = vim.api.nvim_win_get_cursor(win)
+
+        -- restore cursor before animating (buffer stays undone/redone)
+        vim.api.nvim_win_set_cursor(win, start_pos)
+
+        smooth_scroll(start_pos[1], target_pos[1])
+    end, opts)
+end
+
 -- Jumps to top and bottom of page
 vim.keymap.set('n', 'gg', function()
     local count = vim.v.count
@@ -37,6 +58,9 @@ end, opts)
 vim.keymap.set('n', 'G', function()
     smooth_scroll(vim.fn.line('.'), vim.fn.line('$'))
 end, opts)
+
+smooth_command('u', 'u')
+smooth_command('<C-r>', '<C-r>')
 
 return M
 
