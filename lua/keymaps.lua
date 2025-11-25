@@ -51,26 +51,6 @@ vim.keymap.set('n', '<leader>%', '%:print<CR>%', { desc = 'Print paired bracket 
 -- Easier spell checking.
 vim.keymap.set('n', '<leader>sc', ':set spell! spelllang=en_us<CR>', { desc = '[s]pell [c]heck toggle.' })
 
--- Exchange coordinates more quickly. (X->Y->Z->X)
-local function cycle_dimensions_xyz(text)
-  -- Temporary replacements to avoid collision
-  text = text:gsub("X", "|X|")
-  text = text:gsub("Y", "|Y|")
-  text = text:gsub("Z", "|Z|")
-
-  -- Final replacements (rotating)
-  text = text:gsub("|X|", "Y")
-  text = text:gsub("|Y|", "Z")
-  text = text:gsub("|Z|", "X")
-
-  return text
-end
-
-vim.keymap.set("n", "<leader>cd", function()
-  local line = vim.api.nvim_get_current_line()
-  vim.api.nvim_set_current_line(cycle_dimensions_xyz(line))
-end, { desc = "[c]ycle [d]imensions across a line." })
-
 -- Function to multiply the number under the cursor
 local function multiply_number_under_cursor(multiplier)
     local row, col = unpack(vim.api.nvim_win_get_cursor(0))

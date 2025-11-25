@@ -38,6 +38,9 @@ require 'linter'
 -- [[ Auto format code before saving. ]]
 require 'formatter'
 
+-- [[ Help for working with dimensions (ex: X, Y, Z) ]]
+require 'dimensions'
+
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
 
