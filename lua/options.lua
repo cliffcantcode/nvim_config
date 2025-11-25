@@ -26,6 +26,7 @@ vim.opt.expandtab = true
 
 -- Save undo history
 vim.opt.undofile = true
+vim.opt.swapfile = false
 
 -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
 vim.opt.ignorecase = true
@@ -56,13 +57,20 @@ vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 999
+vim.opt.sidescrolloff = 5
+
+-- Make command line completion more usable
+vim.opt.wildmode = "longest:full,full"
+vim.opt.wildmenu = true
+
 
 -- If performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
 -- instead raise a dialog asking if you wish to save the current file(s)
 vim.opt.confirm = true
 
--- Don't wrap text
+-- Wrap text
 vim.opt.wrap = true
+vim.opt.linebreak = false
 
 -- Ensure that files are formatted correctly
 vim.opt.encoding = "utf-8"
