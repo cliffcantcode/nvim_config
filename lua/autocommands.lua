@@ -118,6 +118,9 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   callback = function()
     local bufnr = vim.api.nvim_get_current_buf()
     local line_count = vim.api.nvim_buf_line_count(bufnr)
+    
+    if line_count == 0 then return end
+
     local last_line = vim.api.nvim_buf_get_lines(bufnr, line_count - 1, line_count, false)[1]
 
     if last_line ~= "" then
