@@ -10,45 +10,68 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 })
 
 -- Show paired bracket line.
+local ns = vim.api.nvim_create_namespace("BracketEcho")
 vim.api.nvim_create_autocmd("CursorHold", {
-  desc = "Show what's on the line of the matching bracket.",
+  desc = "Show matching line using Treesitter (non-blocking)",
   group = vim.api.nvim_create_augroup("BracketEcho", { clear = true }),
-  pattern = "*",
   callback = function()
-    local orig_pos = vim.api.nvim_win_get_cursor(0)
-    local row = orig_pos[1]
-    local line = vim.api.nvim_get_current_line()
+    vim.api.nvim_buf_clear_namespace(0, ns, 0, -1)
 
-    local byte_idx = line:find("[%]%)%}]")
-    if not byte_idx then
-      vim.api.nvim_echo({}, false, {})
-      return
-    end
-    -- Convert the byte index to a column index for the cursor.
-    local col = vim.str_utfindex(line:sub(1, byte_idx)) - 1
-
-    -- Save the cursor position and jump to the bracket.
-    vim.api.nvim_win_set_cursor(0, { row, col })
-
-    local ok = pcall(vim.cmd, "silent! normal! %")
-    if not ok then
-      vim.api.nvim_win_set_cursor(0, orig_pos)
-      vim.api.nvim_echo({}, false, {})
-      return
+    -- 0. Ensure Treesitter is available + buffer has a parser
+    local has_ts, ts = pcall(require, "vim.treesitter")
+    if not has_ts then
+      return -- TS not installed
     end
 
-    local match_row = vim.fn.line(".")
-    if match_row == row then
-      vim.api.nvim_win_set_cursor(0, orig_pos)
-      vim.api.nvim_echo({}, false, {})
-      return
+    local ok_parser, parser = pcall(ts.get_parser, 0)
+    if not ok_parser or not parser then
+      return -- no parser for this buffer/filetype
     end
 
-    local match_line = vim.fn.getline(match_row)
+    -- 1. Get current state
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local row = cursor[1] - 1
+    local line_text = vim.api.nvim_get_current_line()
+
+    -- 2. Find bracket or 'end'
+    local start_idx = line_text:find("[%]%)%}]")
+    if not start_idx then
+      start_idx = line_text:find("%f[%w]end%f[%W]")
+    end
+    if not start_idx then return end
+
+    local col = start_idx - 1
+
+    -- 3. Treesitter node
+    local ok, node = pcall(vim.treesitter.get_node, { pos = { row, col } })
+    if not ok or not node then return end
+
+    -- 4. Walk up
+    local target = node
+    local start_row = target:range()
+    while target and start_row == row do
+      target = target:parent()
+      if target then start_row = target:range() end
+    end
+
+    if not target or start_row == row then return end
+
+    if math.abs(start_row - row) <= 15 then return end
+
+    -- 5. Get line
+    local match_line = vim.api.nvim_buf_get_lines(0, start_row, start_row + 1, false)[1]
+    if not match_line then return end
+
     local display = match_line:match("^%s*$") and "<blank line>" or match_line
-    vim.api.nvim_echo({{string.format("# %d: %s", match_row, display), "Comment"}}, false, {})
+    display = display:gsub("^%s+", "")
+    if #display > 160 then display = display:sub(1, 160) .. "..." end
 
-    vim.api.nvim_win_set_cursor(0, orig_pos)
+    -- 6. Virtual text under the cursor line (NO hit-enter prompt possible)
+    vim.api.nvim_buf_set_extmark(0, ns, row, 0, {
+      virt_text = { { string.format("#%d: %s", start_row + 1, display), "Comment" } },
+      virt_text_pos = "eol",
+      hl_mode = "combine",
+    })
   end
 })
 

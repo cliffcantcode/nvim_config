@@ -7,6 +7,7 @@ M.replacements = {
   -- We need to avoid things like (backgroun => background => backgroundd).
   ["Backgroun(%f[%s])"] = "Background%1",
   ["backgroun(%f[%s])"] = "background%1",
+  ["globabl"] = "global",
 }
 
 M.filetype_replacements = {
