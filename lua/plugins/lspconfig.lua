@@ -1,6 +1,58 @@
 -- LSP Plugins
--- TODO: Fix this somehow?
 return {
+  {
+    "neovim/nvim-lspconfig",
+    dependencies = {
+      "hrsh7th/nvim-cmp",
+      "hrsh7th/cmp-nvim-lsp",
+      "L3MON4D3/LuaSnip",
+    },
+    config = function()
+      -- Capabilities for completion (nvim-cmp)
+      local capabilities = require("cmp_nvim_lsp").default_capabilities()
+
+      -- Setup ZLS
+      require("lspconfig").zls.setup({
+        capabilities = capabilities,
+        settings = {
+          zls = {
+            enable_snippets = true,
+            enable_autofix = true,
+          },
+        }
+      })
+    end
+  },
+
+  -- Completion engine
+  {
+    "hrsh7th/nvim-cmp",
+    config = function()
+      local cmp = require("cmp")
+      cmp.setup({
+        snippet = {
+          expand = function(args)
+            require("luasnip").lsp_expand(args.body)
+          end,
+        },
+        mapping = cmp.mapping.preset.insert({
+          ["<CR>"] = cmp.mapping.confirm({ select = true }),
+        }),
+        sources = cmp.config.sources({
+          { name = "nvim_lsp" },
+          { name = "buffer" },
+          { name = "path" },
+        }),
+      })
+    end
+  },
+
+  -- Snippet engine (needed for LSP completion)
+  { "L3MON4D3/LuaSnip", version = "v2.*" },
+}
+
+-- TODO: Fix this somehow?
+-- return {
 --   {
 --     -- `lazydev` configures Lua LSP for your Neovim config, runtime and plugins
 --     -- used for completion, annotations and signatures of Neovim apis
@@ -261,6 +313,7 @@ return {
 --       }
 --     end,
 --   },
-}
+-- }
 
 -- vim: ts=2 sts=2 sw=2 et
+
