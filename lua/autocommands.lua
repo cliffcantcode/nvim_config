@@ -9,6 +9,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
+-- TODO: Make this not trigger if it's pairing with the top of the file.
 -- Show paired bracket line.
 local ns = vim.api.nvim_create_namespace("BracketEcho")
 vim.api.nvim_create_autocmd("CursorHold", {

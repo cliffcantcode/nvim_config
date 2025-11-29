@@ -12,6 +12,7 @@ return {
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
       -- Setup ZLS
+      -- TODO: This is depricated, fix it.
       require("lspconfig").zls.setup({
         capabilities = capabilities,
         settings = {
