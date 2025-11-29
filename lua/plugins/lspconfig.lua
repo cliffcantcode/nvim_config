@@ -8,20 +8,20 @@ return {
       "L3MON4D3/LuaSnip",
     },
     config = function()
-      -- Capabilities for completion (nvim-cmp)
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-      -- Setup ZLS
-      -- TODO: This is depricated, fix it.
-      require("lspconfig").zls.setup({
+      vim.lsp.config("zls", {
         capabilities = capabilities,
         settings = {
           zls = {
             enable_snippets = true,
             enable_autofix = true,
           },
-        }
+        },
       })
+
+      -- Autostart the server (also new API)
+      vim.lsp.enable("zls")
     end
   },
 
