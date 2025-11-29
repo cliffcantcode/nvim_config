@@ -57,7 +57,7 @@ vim.api.nvim_create_autocmd("CursorHold", {
 
     if not target or start_row == row then return end
 
-    if math.abs(start_row - row) <= 15 then return end
+    if (math.abs(start_row - row) <= 15) or (start_row == 0) then return end
 
     -- 5. Get line
     local match_line = vim.api.nvim_buf_get_lines(0, start_row, start_row + 1, false)[1]
