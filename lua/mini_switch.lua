@@ -16,6 +16,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "+", "-" },
   { "!=", "==" },
   { "X", "Y", "Z" },
+  { "x", "y", "z" },
   { "New", "Old" },
   { ":", ";" },
   { "High", "Low" },
@@ -28,6 +29,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "R =", "G =", "B =", "A =" },
   { "u32", "i32" },
   { "u64", "i64" },
+  { "on", "off" },
 }
 
 local ft_defaults = {

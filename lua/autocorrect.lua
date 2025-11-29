@@ -8,6 +8,8 @@ M.replacements = {
   ["Backgroun(%f[%s])"] = "Background%1",
   ["backgroun(%f[%s])"] = "background%1",
   ["globabl"] = "global",
+  ["Inpute"] = "Input",
+  ["inpute"] = "input",
 }
 
 M.filetype_replacements = {
