@@ -13,32 +13,43 @@ M.cycles = {
    { "x_", "y_", "z_" },
 }
 
-local cycle_map = {}
+local  forward_cycle_map = {}
+local backward_cycle_map = {}
 
+-- Build mapping
 for _, cycle in ipairs(M.cycles) do
   for i, c in ipairs(cycle) do
-    local next = cycle[(i % #cycle) + 1]
-    cycle_map[c] = next
+    forward_cycle_map[c] = cycle[(i % #cycle) + 1]
+
+    local prev_i = i - 1
+    if prev_i == 0 then prev_i = #cycle end
+    backward_cycle_map[c] = cycle[prev_i]
   end
 end
 
-local function cycle_word(word)
-  if M.dimension_exclusion_list[word] then return word end
-
-  return word:gsub(".", function(c)
-    return cycle_map[c] or c
+local function cycle_dimensions_line(text, cycle_map)
+  return text:gsub("[%w_]+", function(tok)
+    if M.dimension_exclusion_list[tok] then return tok end
+    return cycle_map[tok] or tok
   end)
 end
 
--- Exchange coordinates more quickly. (X->Y->Z->X)
-local function cycle_dimensions_line(text)
-  return (text:gsub("%w+", cycle_word))
+local function perform_cycle(cycle_map)
+  local line = vim.api.nvim_get_current_line()
+  local new_line = cycle_dimensions_line(line, cycle_map)
+
+  if new_line ~= line then
+    vim.api.nvim_set_current_line(new_line)
+  end
 end
 
 vim.keymap.set("n", "<leader>cd", function()
-  local line = vim.api.nvim_get_current_line()
-  vim.api.nvim_set_current_line(cycle_dimensions_line(line))
+  perform_cycle(forward_cycle_map)
 end, { desc = "[c]ycle [d]imensions across a line." })
+
+vim.keymap.set("n", "<leader>cD", function()
+  perform_cycle(backward_cycle_map)
+end, { desc = "[c]ycle [d]imensions across a line backwards." })
 
 return M
 
