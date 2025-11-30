@@ -8,15 +8,14 @@ M.dimension_exclusion_list = {
 }
 
 M.cycles = {
-   { "X", "Y", "Z" },
-   { "_x", "_y", "_z" },
-   { "x_", "y_", "z_" },
+  { "X",  "Y",  "Z"  },
+  { "_x", "_y", "_z" },
+  { "x_", "y_", "z_" },
 }
 
-local  forward_cycle_map = {}
+local forward_cycle_map = {}
 local backward_cycle_map = {}
 
--- Build mapping
 for _, cycle in ipairs(M.cycles) do
   for i, c in ipairs(cycle) do
     forward_cycle_map[c] = cycle[(i % #cycle) + 1]
@@ -27,10 +26,51 @@ for _, cycle in ipairs(M.cycles) do
   end
 end
 
+-- Build and sort patterns - longer first to avoid "_x" vs "X" overlaps.
+local cycle_patterns = {}
+for key, _ in pairs(forward_cycle_map) do
+  table.insert(cycle_patterns, key)
+end
+table.sort(cycle_patterns, function(a, b)
+  return #a > #b
+end)
+
+local function transform_token(tok, cycle_map)
+  -- Skip whole-token exclusions
+  if M.dimension_exclusion_list[tok] then return tok end
+
+  local i = 1
+  local len = #tok
+  local out = {}
+
+  while i <= len do
+    local replaced = false
+
+    for _, key in ipairs(cycle_patterns) do
+      local key_len = #key
+      if i + key_len - 1 <= len then
+        if tok:sub(i, i + key_len - 1) == key then
+          local repl = cycle_map[key] or key
+          table.insert(out, repl)
+          i = i + key_len
+          replaced = true
+          break
+        end
+      end
+    end
+
+    if not replaced then
+      table.insert(out, tok:sub(i, i))
+      i = i + 1
+    end
+  end
+
+  return table.concat(out)
+end
+
 local function cycle_dimensions_line(text, cycle_map)
   return text:gsub("[%w_]+", function(tok)
-    if M.dimension_exclusion_list[tok] then return tok end
-    return cycle_map[tok] or tok
+    return transform_token(tok, cycle_map)
   end)
 end
 
