@@ -35,8 +35,7 @@ table.sort(cycle_patterns, function(a, b)
   return #a > #b
 end)
 
-local function transform_token(tok, cycle_map)
-  -- Skip whole-token exclusions
+local function transform_segment(tok, cycle_map)
   if M.dimension_exclusion_list[tok] then return tok end
 
   local i = 1
@@ -68,6 +67,26 @@ local function transform_token(tok, cycle_map)
   return table.concat(out)
 end
 
+local function transform_token(tok, cycle_map)
+  if M.dimension_exclusion_list[tok] then return tok end
+
+  -- Exclusion prefix + '_' + tail, e.g. MAX_X -> MAX_Y
+  for ex, _ in pairs(M.dimension_exclusion_list) do
+    local ex_len = #ex
+    if #tok > ex_len + 1
+       and tok:sub(1, ex_len) == ex
+       and tok:sub(ex_len + 1, ex_len + 1) == "_" then
+      local head = ex
+      local sep = "_"
+      local tail = tok:sub(ex_len + 2) -- after "EX_"
+      local new_tail = transform_segment(tail, cycle_map)
+      return head .. sep .. new_tail
+    end
+  end
+
+  return transform_segment(tok, cycle_map)
+end
+
 local function cycle_dimensions_line(text, cycle_map)
   return text:gsub("[%w_]+", function(tok)
     return transform_token(tok, cycle_map)
@@ -91,5 +110,43 @@ vim.keymap.set("n", "<leader>cD", function()
   perform_cycle(backward_cycle_map)
 end, { desc = "[c]ycle [d]imensions across a line backwards." })
 
+-- Tests.
+local function run_tests()
+  local f = forward_cycle_map
+  local b = backward_cycle_map
+
+  local tests = {
+    -- forward cycles
+    { "value_x",      "value_y",      f },
+    { "value_z",      "value_x",      f },
+    { "Y",            "Z",            f },
+
+    -- backward cycles
+    { "value_x",      "value_z",      b },
+    { "_x",           "_z",           b },
+    { "Z",            "Y",            b },
+
+    -- exclusion list
+    { "MAX",          "MAX",          f },
+    { "MAX_X",        "MAX_Y",        f },
+    { "index",        "index",        f },
+
+    -- multi-match in one token
+    { "z_to_x",     "x_to_y",     f },
+  }
+
+  for _, t in ipairs(tests) do
+    local input, expected, map = t[1], t[2], t[3]
+    local output = cycle_dimensions_line(input, map)
+    assert(
+      output == expected,
+      string.format("Test failed: '%s' => '%s', expected '%s'", input, output, expected)
+    )
+  end
+end
+
+run_tests()
+
 return M
+
 
