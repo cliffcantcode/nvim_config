@@ -22,6 +22,26 @@ return {
 
       -- Autostart the server (also new API)
       vim.lsp.enable("zls")
+
+      -- LSP keymaps (buffer-local, only when an LSP actually attaches)
+      vim.api.nvim_create_autocmd("LspAttach", {
+        group = vim.api.nvim_create_augroup("LspKeymaps", { clear = true }),
+        callback = function(event)
+
+          local map = function(keys, func, desc, mode)
+            mode = mode or "n"
+            vim.keymap.set(mode, keys, func, {
+              buffer = event.buf,
+              desc = "LSP: " .. desc,
+            })
+          end
+
+          map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
+          map("<leader>ds", require('telescope.builtin').lsp_document_symbols, '[d]ocument [s]ymbols')
+          map('<leader>gt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
+
+        end,
+      })
     end
   },
 

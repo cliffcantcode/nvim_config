@@ -30,6 +30,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "u32", "i32" },
   { "u64", "i64" },
   { "on", "off" },
+  { "'", '"' },
 }
 
 local ft_defaults = {
