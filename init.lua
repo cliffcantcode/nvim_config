@@ -41,6 +41,9 @@ require 'formatter'
 -- [[ Help for working with dimensions (ex: X, Y, Z) ]]
 require 'dimensions'
 
+-- [[ Show distant paired brackets inline. ]]
+require 'echo_brackets'
+
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
 
