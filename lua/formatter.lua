@@ -75,8 +75,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     ---------------------------------------------------------------------------
     -- C / C++ / headers: simple, safe heuristic
     ---------------------------------------------------------------------------
-    local is_c_like = (ft == "c" or ft == "cpp" or ft == "objc" or ft == "objcpp"
-      or ft == "h" or ft == "hpp")
+    local is_c_like = (ft == "cpp" or ft == "h" or ft == "hpp")
     if not is_c_like then
       return
     end
