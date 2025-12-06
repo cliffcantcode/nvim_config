@@ -76,5 +76,8 @@ vim.opt.linebreak = false
 vim.opt.encoding = "utf-8"
 vim.opt.fileencoding = "utf-8"
 
+-- Make jump list behave like a stack to prevent a build up of weird jumps.
+vim.opt.jumpoptions = "stack"
+
 -- vim: ts=2 sts=2 sw=2 et
 
