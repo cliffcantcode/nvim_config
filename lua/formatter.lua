@@ -5,6 +5,9 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   group = vim.api.nvim_create_augroup("ContainerSemicolonFix", { clear = true }),
   pattern = { "*.zig", "*.c", "*.h", "*.cpp", "*.hpp" },
   callback = function()
+    -- Save position to prevent changelist pollution.
+    local view = vim.fn.winsaveview()
+
     local bufnr = vim.api.nvim_get_current_buf()
     local ft = vim.bo.filetype
 
@@ -19,9 +22,15 @@ vim.api.nvim_create_autocmd("BufWritePre", {
       if not ok_parser or not parser then return end
 
       local tree = parser:parse()[1]
-      if not tree then return end
+      if not tree then 
+        vim.fn.winrestview(view)
+        return 
+      end
       local root = tree:root()
-      if not root then return end
+      if not root then 
+        vim.fn.winrestview(view)
+        return 
+      end
 
       local function get_line(buf, row)
         return vim.api.nvim_buf_get_lines(buf, row, row + 1, false)[1]
@@ -69,6 +78,9 @@ vim.api.nvim_create_autocmd("BufWritePre", {
       end
 
       visit(root)
+
+      -- Restore the cursor to the original position.
+      vim.fn.winrestview(view)
       return
     end
 
@@ -77,11 +89,15 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     ---------------------------------------------------------------------------
     local is_c_like = (ft == "cpp" or ft == "h" or ft == "hpp")
     if not is_c_like then
+      vim.fn.winrestview(view)
       return
     end
 
     local line_count = vim.api.nvim_buf_line_count(bufnr)
-    if line_count == 0 then return end
+    if line_count == 0 then 
+      vim.fn.winrestview(view)
+      return 
+    end
 
     -- Find the last nonblank line
     local end_line = nil
@@ -92,10 +108,16 @@ vim.api.nvim_create_autocmd("BufWritePre", {
         break
       end
     end
-    if not end_line then return end
+    if not end_line then 
+      vim.fn.winrestview(view)
+      return 
+    end
 
     local text = vim.api.nvim_buf_get_lines(bufnr, end_line, end_line + 1, false)[1]
-    if not text then return end
+    if not text then 
+      vim.fn.winrestview(view)
+      return 
+    end
 
     -- Heuristic: only fix the very common pattern:
     --   struct Foo { ... }
@@ -103,11 +125,13 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     -- We do NOT try to fix 'typedef struct { ... } Foo' etc., because inserting
     -- ';' in the wrong spot can change meaning.
     if not text:match("^%s*}%s*$") then
+      vim.fn.winrestview(view)
       return
     end
 
     -- Already has semicolon like "};"
     if text:match(";%s*$") then
+      vim.fn.winrestview(view)
       return
     end
 
@@ -125,12 +149,18 @@ vim.api.nvim_create_autocmd("BufWritePre", {
       end
     end
 
-    if not has_container then return end
+    if not has_container then 
+      vim.fn.winrestview(view)
+      return 
+    end
 
     -- Append semicolon at end of last line
     vim.api.nvim_buf_set_lines(bufnr, end_line, end_line + 1, false, {
       text .. ";",
     })
+    
+    -- Restore the cursor to the original position.
+    vim.fn.winrestview(view)
   end,
 })
 
@@ -140,6 +170,8 @@ M.formatters = {
 }
 
 local function format_buffer(cmd)
+  local view = vim.fn.winsaveview()
+
   local buf = vim.api.nvim_get_current_buf()
   local text = table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), "\n")
 
@@ -151,6 +183,9 @@ local function format_buffer(cmd)
   else
     vim.notify("Formatter error:\n" .. formatted, vim.log.levels.ERROR)
   end
+
+  -- Restore the cursor to the original position.
+  vim.fn.winrestview(view)
 end
 
 vim.api.nvim_create_autocmd("BufWritePre", {
