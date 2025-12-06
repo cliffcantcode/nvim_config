@@ -10,6 +10,8 @@ M.replacements = {
   ["globabl"] = "global",
   ["Inpute"] = "Input",
   ["inpute"] = "input",
+  ["sount"] = "sound",
+  ["Sount"] = "Sound",
 }
 
 M.filetype_replacements = {
