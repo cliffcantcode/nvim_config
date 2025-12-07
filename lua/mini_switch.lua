@@ -27,6 +27,8 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "A", "B", "C" },
   { "R,",  "G,",  "B,",  "A," },
   { "R =", "G =", "B =", "A =" },
+  { "u8", "i8" },
+  { "u16", "i16" },
   { "u32", "i32" },
   { "u64", "i64" },
   { "on", "off" },
