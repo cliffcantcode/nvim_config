@@ -128,6 +128,10 @@ local function setup_autocmd()
 
       local ft = vim.bo[bufnr].filetype
       local combined = vim.tbl_extend("force", M.replacements, M.filetype_replacements[ft] or {})
+
+      -- Join these edits into the last change so g; / g, aren't polluted
+      pcall(vim.cmd, "silent keepjumps keepalt undojoin")
+
       autocorrect_buffer(bufnr, combined)
     end,
   })
