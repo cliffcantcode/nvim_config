@@ -1,35 +1,45 @@
 local M = {}
 
+---------------------------------------------------------------------------
+-- Semicolon fixer for container declarations
+---------------------------------------------------------------------------
+
 vim.api.nvim_create_autocmd("BufWritePre", {
   desc = "Ensure container declarations end with a semicolon (Zig via TS, C-like via heuristic)",
   group = vim.api.nvim_create_augroup("ContainerSemicolonFix", { clear = true }),
   pattern = { "*.zig", "*.c", "*.h", "*.cpp", "*.hpp" },
   callback = function()
-    -- Save position to prevent changelist pollution.
+    -- Save position / window state
     local view = vim.fn.winsaveview()
 
     local bufnr = vim.api.nvim_get_current_buf()
     local ft = vim.bo.filetype
 
-    ---------------------------------------------------------------------------
+    -----------------------------------------------------------------------
     -- Zig: Treesitter-based fix for struct/union/enum declarations
-    ---------------------------------------------------------------------------
+    -----------------------------------------------------------------------
     if ft == "zig" then
       local ok_ts, ts = pcall(require, "vim.treesitter")
-      if not ok_ts then return end
+      if not ok_ts then
+        vim.fn.winrestview(view)
+        return
+      end
 
       local ok_parser, parser = pcall(ts.get_parser, bufnr, "zig")
-      if not ok_parser or not parser then return end
+      if not ok_parser or not parser then
+        vim.fn.winrestview(view)
+        return
+      end
 
       local tree = parser:parse()[1]
-      if not tree then 
+      if not tree then
         vim.fn.winrestview(view)
-        return 
+        return
       end
       local root = tree:root()
-      if not root then 
+      if not root then
         vim.fn.winrestview(view)
-        return 
+        return
       end
 
       local function get_line(buf, row)
@@ -41,7 +51,6 @@ vim.api.nvim_create_autocmd("BufWritePre", {
         vim.api.nvim_buf_set_text(buf, row, col_after, row, col_after, { ";" })
       end
 
-      -- All container-like declarations we care about in Zig
       local container_kinds = {
         struct_declaration = true,
         union_declaration  = true,
@@ -79,24 +88,24 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 
       visit(root)
 
-      -- Restore the cursor to the original position.
+      -- Restore the cursor / view
       vim.fn.winrestview(view)
       return
     end
 
-    ---------------------------------------------------------------------------
-    -- C / C++ / headers: simple, safe heuristic
-    ---------------------------------------------------------------------------
-    local is_c_like = (ft == "cpp" or ft == "h" or ft == "hpp")
+    -----------------------------------------------------------------------
+    -- C / C++ / headers: simple heuristic
+    -----------------------------------------------------------------------
+    local is_c_like = (ft == "cpp" or ft == "c" or ft == "h" or ft == "hpp")
     if not is_c_like then
       vim.fn.winrestview(view)
       return
     end
 
     local line_count = vim.api.nvim_buf_line_count(bufnr)
-    if line_count == 0 then 
+    if line_count == 0 then
       vim.fn.winrestview(view)
-      return 
+      return
     end
 
     -- Find the last nonblank line
@@ -108,27 +117,30 @@ vim.api.nvim_create_autocmd("BufWritePre", {
         break
       end
     end
-    if not end_line then 
+    if not end_line then
       vim.fn.winrestview(view)
-      return 
+      return
     end
 
     local text = vim.api.nvim_buf_get_lines(bufnr, end_line, end_line + 1, false)[1]
-    if not text then 
+    if not text then
       vim.fn.winrestview(view)
-      return 
+      return
     end
 
+    -- Only touch "}"/";" shaped endings
     if not text:match("^%s*}%s*$") then
       vim.fn.winrestview(view)
       return
     end
 
+    -- Already has semicolon like "};"
     if text:match(";%s*$") then
       vim.fn.winrestview(view)
       return
     end
 
+    -- Look upward for struct/union/enum on previous nonblank line
     local has_container = false
     for l = end_line - 1, 0, -1 do
       local up = vim.api.nvim_buf_get_lines(bufnr, l, l + 1, false)[1]
@@ -142,82 +154,42 @@ vim.api.nvim_create_autocmd("BufWritePre", {
       end
     end
 
-    if not has_container then 
-      vim.fn.winrestview(view)
-      return 
-    end
-
-    vim.api.nvim_buf_set_lines(bufnr, end_line, end_line + 1, false, {
-      text .. ";",
-    })
-    
-    vim.fn.winrestview(view)
-  end,
-})
-
--- Run language specific formatters.
-M.formatters = {
-  zig = "zig fmt --stdin",
-}
-
--- Save & restore marks around full-buffer formatting
-local function save_marks(buf)
-  local ok, marks = pcall(vim.fn.getmarklist, buf)
-  if not ok or not marks then
-    return {}
-  end
-  local saved = {}
-  for _, m in ipairs(marks) do
-    local mark = m.mark  -- like "'a"
-    local ch = mark:sub(2, 2)
-    if ch:match("%a") then
-      saved[mark] = m.pos
-    end
-  end
-  return saved
-end
-
-local function restore_marks(buf, saved)
-  local line_count = vim.api.nvim_buf_line_count(buf)
-  for mark, pos in pairs(saved) do
-    local lnum = pos[2]
-    if lnum >= 1 and lnum <= line_count then
-      vim.fn.setpos(mark, pos)
-    end
-  end
-end
-
-local function format_buffer(cmd)
-  local view = vim.fn.winsaveview()
-  local buf = vim.api.nvim_get_current_buf()
-
-  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-  local text = table.concat(lines, "\n")
-
-  local formatted = vim.fn.system(cmd, text)
-
-  if vim.v.shell_error == 0 then
-    if formatted == text or formatted == text .. "\n" then
-      -- No actual change -> don't rewrite buffer, preserves marks
+    if not has_container then
       vim.fn.winrestview(view)
       return
     end
 
-    local new_lines = vim.split(formatted, "\n", { trimempty = false })
+    -- Append semicolon at end of last line
+    vim.api.nvim_buf_set_lines(bufnr, end_line, end_line + 1, false, {
+      text .. ";",
+    })
 
-    -- Save marks, rewrite, restore marks
-    local saved = save_marks(buf)
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, new_lines)
-    restore_marks(buf, saved)
-  else
-    vim.notify("Formatter error:\n" .. formatted, vim.log.levels.ERROR)
-  end
+    vim.fn.winrestview(view)
+  end,
+})
 
+---------------------------------------------------------------------------
+-- Formatter: use :%! with keepjumps to avoid jumplist pollution
+---------------------------------------------------------------------------
+
+M.formatters = {
+  zig = "zig fmt --stdin",
+}
+
+local function format_buffer(cmd)
+  -- Save view (cursor + window)
+  local view = vim.fn.winsaveview()
+
+  -- Use Vim's filter mechanism; keepjumps prevents jumplist spam
+  -- keepalt avoids messing with the alternate file
+  vim.cmd("silent keepjumps keepalt %!" .. cmd)
+
+  -- Restore view
   vim.fn.winrestview(view)
 end
 
 vim.api.nvim_create_autocmd("BufWritePre", {
-  pattern = "*",
+  pattern = "*.zig",
   callback = function()
     local ft = vim.bo.filetype
     local cmd = M.formatters[ft]
@@ -228,3 +200,4 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 })
 
 return M
+
