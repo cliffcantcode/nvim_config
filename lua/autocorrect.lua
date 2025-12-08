@@ -16,13 +16,13 @@ M.replacements = {
 
 M.filetype_replacements = {
   lua = {
-  ["funciton"] = "function",
+    ["funciton"] = "function",
   },
   cpp = {
-  ["Hight"] = "High",
+    ["Hight"] = "High",
   },
   zig = {
-  ["%f[%w]cont%f[%s]"] = "const",
+    ["%f[%w]cont%f[%s]"] = "const",
   },
 }
 
@@ -48,24 +48,69 @@ local function is_excluded(filepath, bufnr)
   return false
 end
 
+-- Apply replacements using nvim_buf_set_text so we only touch the matched spans
 local function autocorrect_buffer(bufnr, rules)
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  local changed = false
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  local changed_any = false
 
-  for i, line in ipairs(lines) do
-    local orig = line
+  for lnum = 0, line_count - 1 do
+    local line = vim.api.nvim_buf_get_lines(bufnr, lnum, lnum + 1, false)[1]
+    if not line or line == "" then
+      goto continue
+    end
+
+    local edits = {}
+
+    -- Collect all edits for this line
     for wrong, right in pairs(rules) do
-      line = line:gsub(wrong, right)
+      local start = 1
+      while true do
+        local s, e, cap = line:find(wrong, start)
+        if not s then break end
+
+        local replacement = right
+        -- handle a single capture %1 (enough for your current patterns)
+        if cap then
+          replacement = right:gsub("%%1", cap)
+        end
+
+        table.insert(edits, {
+          start_col = s - 1,  -- 0-based
+          end_col   = e,      -- end-exclusive for set_text
+          text      = replacement,
+        })
+
+        -- move past this match
+        start = e + 1
+      end
     end
-    if line ~= orig then
-      lines[i] = line
-      changed = true
+
+    if #edits > 0 then
+      changed_any = true
+      -- Apply from right to left so earlier columns don't shift later ones
+      table.sort(edits, function(a, b)
+        return a.start_col > b.start_col
+      end)
+
+      for _, edit in ipairs(edits) do
+        vim.api.nvim_buf_set_text(
+          bufnr,
+          lnum,
+          edit.start_col,
+          lnum,
+          edit.end_col,
+          { edit.text }
+        )
+      end
+
+      -- Get fresh line content for next rule processing on this line
+      line = vim.api.nvim_buf_get_lines(bufnr, lnum, lnum + 1, false)[1]
     end
+
+    ::continue::
   end
 
-  if changed then
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  end
+  return changed_any
 end
 
 local function setup_autocmd()
