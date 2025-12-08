@@ -119,23 +119,16 @@ vim.api.nvim_create_autocmd("BufWritePre", {
       return 
     end
 
-    -- Heuristic: only fix the very common pattern:
-    --   struct Foo { ... }
-    -- where the last line is just "}" (optionally with spaces).
-    -- We do NOT try to fix 'typedef struct { ... } Foo' etc., because inserting
-    -- ';' in the wrong spot can change meaning.
     if not text:match("^%s*}%s*$") then
       vim.fn.winrestview(view)
       return
     end
 
-    -- Already has semicolon like "};"
     if text:match(";%s*$") then
       vim.fn.winrestview(view)
       return
     end
 
-    -- Look upward for struct/union/enum on the previous nonblank line
     local has_container = false
     for l = end_line - 1, 0, -1 do
       local up = vim.api.nvim_buf_get_lines(bufnr, l, l + 1, false)[1]
@@ -154,12 +147,10 @@ vim.api.nvim_create_autocmd("BufWritePre", {
       return 
     end
 
-    -- Append semicolon at end of last line
     vim.api.nvim_buf_set_lines(bufnr, end_line, end_line + 1, false, {
       text .. ";",
     })
     
-    -- Restore the cursor to the original position.
     vim.fn.winrestview(view)
   end,
 })
@@ -169,22 +160,59 @@ M.formatters = {
   zig = "zig fmt --stdin",
 }
 
+-- Save & restore marks around full-buffer formatting
+local function save_marks(buf)
+  local ok, marks = pcall(vim.fn.getmarklist, buf)
+  if not ok or not marks then
+    return {}
+  end
+  local saved = {}
+  for _, m in ipairs(marks) do
+    local mark = m.mark  -- like "'a"
+    local ch = mark:sub(2, 2)
+    if ch:match("%a") then
+      saved[mark] = m.pos
+    end
+  end
+  return saved
+end
+
+local function restore_marks(buf, saved)
+  local line_count = vim.api.nvim_buf_line_count(buf)
+  for mark, pos in pairs(saved) do
+    local lnum = pos[2]
+    if lnum >= 1 and lnum <= line_count then
+      vim.fn.setpos(mark, pos)
+    end
+  end
+end
+
 local function format_buffer(cmd)
   local view = vim.fn.winsaveview()
-
   local buf = vim.api.nvim_get_current_buf()
-  local text = table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), "\n")
+
+  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  local text = table.concat(lines, "\n")
 
   local formatted = vim.fn.system(cmd, text)
 
   if vim.v.shell_error == 0 then
-    local lines = vim.split(formatted, "\n", { trimempty = false })
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+    if formatted == text or formatted == text .. "\n" then
+      -- No actual change -> don't rewrite buffer, preserves marks
+      vim.fn.winrestview(view)
+      return
+    end
+
+    local new_lines = vim.split(formatted, "\n", { trimempty = false })
+
+    -- Save marks, rewrite, restore marks
+    local saved = save_marks(buf)
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, new_lines)
+    restore_marks(buf, saved)
   else
     vim.notify("Formatter error:\n" .. formatted, vim.log.levels.ERROR)
   end
 
-  -- Restore the cursor to the original position.
   vim.fn.winrestview(view)
 end
 
@@ -200,4 +228,3 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 })
 
 return M
-
