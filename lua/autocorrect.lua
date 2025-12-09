@@ -12,6 +12,8 @@ M.replacements = {
   ["inpute"] = "input",
   ["sount"] = "sound",
   ["Sount"] = "Sound",
+  ["Hald"] = "Half",
+  ["hald"] = "half",
 }
 
 M.filetype_replacements = {

@@ -24,6 +24,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "Right", "Left" },
   { "right", "left" },
   { "Up", "Down" },
+  { "up", "down" },
   { "A", "B", "C" },
   { "R,",  "G,",  "B,",  "A," },
   { "R =", "G =", "B =", "A =" },
