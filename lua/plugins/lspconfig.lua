@@ -39,7 +39,14 @@ return {
           map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
           map("<leader>ds", require('telescope.builtin').lsp_document_symbols, '[d]ocument [s]ymbols')
           map('<leader>gt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
+          map("<leader>th", function()
+            local ih = vim.lsp.inlay_hint
+            if not ih then return end
 
+            local buf = event.buf
+            local enabled = ih.is_enabled({ bufnr = buf })
+            ih.enable(not enabled, { bufnr = buf })
+          end, "[t]oggle [h]ints.")
         end,
       })
     end
