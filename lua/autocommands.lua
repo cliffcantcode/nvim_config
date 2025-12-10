@@ -71,7 +71,7 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
 
 vim.api.nvim_create_autocmd("BufWritePre", {
   group = vim.api.nvim_create_augroup("EnsureFinalNewline", { clear = true }),
-  pattern = "*",
+  pattern = { "*.zig", "*.c", "*.cpp", "*.lua", "*.md", "*.txt", "*.json", "*.toml", "*.vim", "*.py" },
   callback = function()
     local bufnr = vim.api.nvim_get_current_buf()
     local line_count = vim.api.nvim_buf_line_count(bufnr)

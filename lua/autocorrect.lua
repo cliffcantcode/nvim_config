@@ -4,7 +4,6 @@ M.replacements = {
   ["resctangle"] = "rectangle",
   ["Resctangle"] = "Rectangle",
   ["Spaceing"] = "Spacing",
-  -- We need to avoid things like (backgroun => background => backgroundd).
   ["Backgroun(%f[%s])"] = "Background%1",
   ["backgroun(%f[%s])"] = "background%1",
   ["globabl"] = "global",
@@ -12,8 +11,6 @@ M.replacements = {
   ["inpute"] = "input",
   ["sount"] = "sound",
   ["Sount"] = "Sound",
-  ["Hald"] = "Half",
-  ["hald"] = "half",
 }
 
 M.filetype_replacements = {
@@ -29,7 +26,7 @@ M.filetype_replacements = {
 }
 
 M.excluded_files = {
-  "autocorrect.lua", -- this file itself
+  "autocorrect.lua",
 }
 
 local function is_readonly(bufnr)
@@ -40,76 +37,68 @@ local function is_excluded(filepath, bufnr)
   if is_readonly(bufnr) then
     return true
   end
-
   for _, pattern in ipairs(M.excluded_files) do
     if filepath:match(pattern) then
       return true
     end
   end
-
   return false
 end
 
--- Apply replacements using nvim_buf_set_text so we only touch the matched spans
+-- Apply replacements using nvim_buf_set_text so we only touch changed spans
 local function autocorrect_buffer(bufnr, rules)
   local line_count = vim.api.nvim_buf_line_count(bufnr)
   local changed_any = false
 
   for lnum = 0, line_count - 1 do
-    local line = vim.api.nvim_buf_get_lines(bufnr, lnum, lnum + 1, false)[1]
-    if not line or line == "" then
-      goto continue
-    end
+    local orig_line = vim.api.nvim_buf_get_lines(bufnr, lnum, lnum + 1, false)[1]
+    if orig_line and orig_line ~= "" then
 
-    local edits = {}
+      local edits = {}
+      local line = orig_line
 
-    -- Collect all edits for this line
-    for wrong, right in pairs(rules) do
-      local start = 1
-      while true do
-        local s, e, cap = line:find(wrong, start)
-        if not s then break end
+      -- Collect edits
+      for wrong, right in pairs(rules) do
+        local start = 1
+        while true do
+          local s, e, cap = line:find(wrong, start)
+          if not s then break end
 
-        local replacement = right
-        -- handle a single capture %1 (enough for your current patterns)
-        if cap then
-          replacement = right:gsub("%%1", cap)
+          local replacement = right
+          if cap then
+            replacement = right:gsub("%%1", cap)
+          end
+
+          table.insert(edits, {
+            start_col = s - 1,  -- 0-based
+            end_col   = e,      -- exclusive
+            text      = replacement,
+          })
+
+          start = e + 1
         end
-
-        table.insert(edits, {
-          start_col = s - 1,  -- 0-based
-          end_col   = e,      -- end-exclusive for set_text
-          text      = replacement,
-        })
-
-        -- move past this match
-        start = e + 1
-      end
-    end
-
-    if #edits > 0 then
-      changed_any = true
-      -- Apply from right to left so earlier columns don't shift later ones
-      table.sort(edits, function(a, b)
-        return a.start_col > b.start_col
-      end)
-
-      for _, edit in ipairs(edits) do
-        vim.api.nvim_buf_set_text(
-          bufnr,
-          lnum,
-          edit.start_col,
-          lnum,
-          edit.end_col,
-          { edit.text }
-        )
       end
 
-      -- Get fresh line content for next rule processing on this line
-      line = vim.api.nvim_buf_get_lines(bufnr, lnum, lnum + 1, false)[1]
-    end
+      -- Apply edits right–to–left
+      if #edits > 0 then
+        changed_any = true
 
-    ::continue::
+        table.sort(edits, function(a, b)
+          return a.start_col > b.start_col
+        end)
+
+        for _, edit in ipairs(edits) do
+          vim.api.nvim_buf_set_text(
+            bufnr,
+            lnum,
+            edit.start_col,
+            lnum,
+            edit.end_col,
+            { edit.text }
+          )
+        end
+      end
+    end
   end
 
   return changed_any
@@ -131,7 +120,7 @@ local function setup_autocmd()
       local ft = vim.bo[bufnr].filetype
       local combined = vim.tbl_extend("force", M.replacements, M.filetype_replacements[ft] or {})
 
-      -- Join these edits into the last change so g; / g, aren't polluted
+      -- Merge into previous undo block when possible
       pcall(vim.cmd, "silent keepjumps keepalt undojoin")
 
       autocorrect_buffer(bufnr, combined)

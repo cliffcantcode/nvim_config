@@ -1,4 +1,3 @@
-
 local M = {}
 
 ---------------------------------------------------------------------------
@@ -170,7 +169,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 })
 
 ---------------------------------------------------------------------------
--- Formatter: use :%! with keepjumps to avoid jumplist pollution
+-- Formatter: only rewrite when there are real changes
 ---------------------------------------------------------------------------
 
 M.formatters = {
@@ -178,14 +177,33 @@ M.formatters = {
 }
 
 local function format_buffer(cmd)
-  -- Save view (cursor + window)
+  local buf = vim.api.nvim_get_current_buf()
   local view = vim.fn.winsaveview()
 
-  -- Use Vim's filter mechanism; keepjumps prevents jumplist spam
-  -- keepalt avoids messing with the alternate file
-  vim.cmd("silent keepjumps keepalt %!" .. cmd)
+  -- Capture current buffer text
+  local old_lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  local old_text = table.concat(old_lines, "\n")
 
-  -- Restore view
+  -- Run formatter
+  local formatted = vim.fn.system(cmd, old_text)
+
+  if vim.v.shell_error ~= 0 then
+    vim.notify("Formatter error:\n" .. formatted, vim.log.levels.ERROR)
+    vim.fn.winrestview(view)
+    return
+  end
+
+  -- If nothing changed (allow for trailing newline differences), skip rewrite
+  if formatted == old_text or formatted == old_text .. "\n" then
+    vim.fn.winrestview(view)
+    return
+  end
+
+  -- Split and replace the buffer with formatted text
+  local new_lines = vim.split(formatted, "\n", { trimempty = false })
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, new_lines)
+
+  -- Restore the cursor / view
   vim.fn.winrestview(view)
 end
 

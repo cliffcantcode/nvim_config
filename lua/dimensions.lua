@@ -7,6 +7,8 @@ M.dimension_exclusion_list = {
   index = true,
 }
 
+local exclusion_keys = vim.tbl_keys(M.dimension_exclusion_list)
+
 M.cycles = {
   { "X",  "Y",  "Z"  },
   { "_x", "_y", "_z" },
@@ -71,7 +73,7 @@ local function transform_token(tok, cycle_map)
   if M.dimension_exclusion_list[tok] then return tok end
 
   -- Exclusion prefix + '_' + tail, e.g. MAX_X -> MAX_Y
-  for ex, _ in pairs(M.dimension_exclusion_list) do
+  for _, ex in pairs(exclusion_keys) do
     local ex_len = #ex
     if #tok > ex_len + 1
        and tok:sub(1, ex_len) == ex
