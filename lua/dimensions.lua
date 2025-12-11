@@ -112,6 +112,7 @@ vim.keymap.set("n", "<leader>cD", function()
   perform_cycle(backward_cycle_map)
 end, { desc = "[c]ycle [d]imensions across a line backwards." })
 
+-- TODO: Figure out why it didn't work for: new_controller.max_x = l_stick_y;
 -- Tests.
 local function run_tests()
   local f = forward_cycle_map
@@ -134,7 +135,7 @@ local function run_tests()
     { "index",        "index",        f },
 
     -- multi-match in one token
-    { "z_to_x",     "x_to_y",     f },
+    { "z_to_x",       "x_to_y",       f },
   }
 
   for _, t in ipairs(tests) do
