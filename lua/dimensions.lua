@@ -73,19 +73,19 @@ end
 -- without introducing a global { "x","y","z" } cycle.
 local function cycle_lower_axis_char(cycle_map, ch)
   if ch == "x" and cycle_map["_x"] then
-    local next = cycle_map["_x"] 
+    local next = cycle_map["_x"]
     if #next == 2 and next:sub(1, 1) == "_" then
-      return next:sub(2)       
+      return next:sub(2)
     end
   elseif ch == "y" and cycle_map["_y"] then
     local next = cycle_map["_y"]
     if #next == 2 and next:sub(1, 1) == "_" then
-      return next:sub(2)      
+      return next:sub(2)
     end
   elseif ch == "z" and cycle_map["_z"] then
     local next = cycle_map["_z"]
     if #next == 2 and next:sub(1, 1) == "_" then
-      return next:sub(2)       
+      return next:sub(2)
     end
   end
   return ch
