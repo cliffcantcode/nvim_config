@@ -24,6 +24,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "RIGHT", "LEFT" },
   { "Right", "Left" },
   { "right", "left" },
+  { "permanent", "transient" },
   { "Up", "Down" },
   { "up", "down" },
   { "Old", "New" },

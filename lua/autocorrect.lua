@@ -11,6 +11,7 @@ M.replacements = {
   ["inpute"] = "input",
   ["sount"] = "sound",
   ["Sount"] = "Sound",
+  ["Aloc"] = "Alloc",
 }
 
 M.filetype_replacements = {
