@@ -2,10 +2,23 @@ local M = {}
 
 -- Add patterns for common mistakes
 M.patterns = {
-  { regex = ">%s*[%w_%.]*[Mm]ax[_%w]*",  message = "'>' points away from the Max. | " },
-  { regex = "<%s*[%w_%.]*[Mm]in[_%w]*",  message = "'<' points away from the Min. | " },
-  { regex = "[%w_%.]*[Mm]ax[_%w]*%s*<",  message = "'<' points away from the Max. | " },
-  { regex = "[%w_%.]*[Mm]in[_%w]*%s*>",  message = "'>' points away from the Min. | " },
+  { regex = ">%s*[%w_%.]*[Mm]ax[_%w]*",  message = "'>' points away from the Max. |=> " },
+  { regex = "<%s*[%w_%.]*[Mm]in[_%w]*",  message = "'<' points away from the Min. |=> " },
+  { regex = "[%w_%.]*[Mm]ax[_%w]*%s*<",  message = "'<' points away from the Max. |=> " },
+  { regex = "[%w_%.]*[Mm]in[_%w]*%s*>",  message = "'>' points away from the Min. |=> " },
+
+  -- Catch "x * @intFromFloat(...)" (risk of premature truncation)
+  -- Case 1: Direct usage like "128 * @intFromFloat(...)"
+  {
+    regex = "%*%s*@intFromFloat",
+    message = "Suspicious multiplication of truncated float. Could result in unintential multiplication by zero. If truncation is intended then be explicit (@round(), etc.). |=> "
+  },
+  -- Case 2: Wrapped usage like "128 * @as(i32, @intFromFloat(...))"
+  -- Explanation: Match '*', optional space, '@as', '(', type name, ',', space, '@intFromFloat'
+  {
+    regex = "%*%s*@as%s*%(%s*[%w_]+%s*,%s*@intFromFloat",
+    message = "Suspicious multiplication of truncated float. Could result in unintential multiplication by zero. If truncation is intended then be explicit (@round(), etc.). |=> "
+  },
 }
 
 local comment_markers = {
@@ -82,7 +95,12 @@ function M.lint_file()
   local buf = vim.api.nvim_get_current_buf()
   local items = M.lint_current_buffer(buf)
   vim.fn.setloclist(0, items, "r")
-  vim.cmd("lopen")
+
+  if #items > 0 then
+    vim.cmd("lopen")
+  else
+    vim.cmd("lclose")
+  end
 end
 
 -- Lint every text file in the current buffer's directory
@@ -142,6 +160,14 @@ end, { desc = "[l]int [f]ile" })
 vim.keymap.set("n", "<leader>ld", function()
   M.lint_directory()
 end, { desc = "[l]int [d]irectory" })
+
+vim.api.nvim_create_autocmd("BufWritePost", {
+  group = vim.api.nvim_create_augroup("AutoLinter", { clear = true }),
+  pattern = "*.zig, *.lua, *.python, *.c, *.cpp, *.rust, *.sh, *.bash",
+  callback = function()
+    M.lint_file()
+  end,
+})
 
 return M
 
