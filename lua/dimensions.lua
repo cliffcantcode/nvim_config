@@ -69,6 +69,28 @@ local function transform_segment(tok, cycle_map)
   return table.concat(out)
 end
 
+-- Rotate a single lowercase axis char x/y/z using the _x/_y/_z cycle,
+-- without introducing a global { "x","y","z" } cycle.
+local function cycle_lower_axis_char(cycle_map, ch)
+  if ch == "x" and cycle_map["_x"] then
+    local next = cycle_map["_x"]
+    if #next == 2 and next:sub(1, 1) == "_" then
+      return next:sub(2)
+    end
+  elseif ch == "y" and cycle_map["_y"] then
+    local next = cycle_map["_y"]
+    if #next == 2 and next:sub(1, 1) == "_" then
+      return next:sub(2)
+    end
+  elseif ch == "z" and cycle_map["_z"] then
+    local next = cycle_map["_z"]
+    if #next == 2 and next:sub(1, 1) == "_" then
+      return next:sub(2)
+    end
+  end
+  return ch
+end
+
 local function transform_token(tok, cycle_map)
   if M.dimension_exclusion_list[tok] then return tok end
 
@@ -76,13 +98,21 @@ local function transform_token(tok, cycle_map)
   for _, ex in pairs(exclusion_keys) do
     local ex_len = #ex
     if #tok > ex_len + 1
-       and tok:sub(1, ex_len) == ex
-       and tok:sub(ex_len + 1, ex_len + 1) == "_" then
-      local head = ex
-      local sep = "_"
-      local tail = tok:sub(ex_len + 2) -- after "EX_"
-      local new_tail = transform_segment(tail, cycle_map)
-      return head .. sep .. new_tail
+      and tok:sub(1, ex_len) == ex
+      and tok:sub(ex_len + 1, ex_len + 1) == "_" then
+        local head = ex
+        local sep = "_"
+        local tail = tok:sub(ex_len + 2) -- after "EX_"
+
+        local new_tail
+        -- Special case: single lowercase axis char (x/y/z) like max_x
+        if tail:match("^[xyz]$") then
+          new_tail = cycle_lower_axis_char(cycle_map, tail)
+        else
+          new_tail = transform_segment(tail, cycle_map)
+        end
+
+        return head .. sep .. new_tail
     end
   end
 
@@ -112,7 +142,6 @@ vim.keymap.set("n", "<leader>cD", function()
   perform_cycle(backward_cycle_map)
 end, { desc = "[c]ycle [d]imensions across a line backwards." })
 
--- TODO: Figure out why it didn't work for: new_controller.max_x = l_stick_y;
 -- Tests.
 local function run_tests()
   local f = forward_cycle_map
@@ -132,6 +161,7 @@ local function run_tests()
     -- exclusion list
     { "MAX",          "MAX",          f },
     { "MAX_X",        "MAX_Y",        f },
+    { "max_x",        "max_y",        f },
     { "index",        "index",        f },
 
     -- multi-match in one token

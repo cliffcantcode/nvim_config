@@ -88,6 +88,27 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   end,
 })
 
+-- Remove trailing whitespace safely on save
+vim.api.nvim_create_autocmd("BufWritePre", {
+  group = vim.api.nvim_create_augroup("TrimWhitespace", { clear = true }),
+  pattern = "*",
+  callback = function(args)
+    local bufnr = args.buf
 
--- vim: ts=2 sts=2 sw=2 et
+    -- Skip special/readonly buffers
+    if vim.bo[bufnr].buftype ~= "" then return end
+    if not vim.bo[bufnr].modifiable then return end
+    if vim.bo[bufnr].readonly then return end
+
+    local view = vim.fn.winsaveview()
+
+    -- Try to join with previous undo block (ok if it fails)
+    pcall(vim.cmd, "silent undojoin")
+
+    -- Now actually trim trailing whitespace
+    vim.cmd([[silent keepjumps keeppatterns %s/\s\+$//e]])
+
+    vim.fn.winrestview(view)
+  end,
+})
 
