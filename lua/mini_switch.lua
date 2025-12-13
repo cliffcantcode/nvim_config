@@ -25,6 +25,8 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "Right", "Left" },
   { "right", "left" },
   { "permanent", "transient" },
+  { "kibi", "mebi", "gibi", "tibi" },
+  { "kilo", "mega", "giga", "tera" },
   { "Up", "Down" },
   { "up", "down" },
   { "Old", "New" },
