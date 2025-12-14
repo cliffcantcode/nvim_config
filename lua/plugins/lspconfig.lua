@@ -23,6 +23,19 @@ return {
       -- Autostart the server (also new API)
       vim.lsp.enable("zls")
 
+      vim.lsp.config("sourcekit", {
+        capabilities = capabilities,
+        cmd = { "xcrun", "sourcekit-lsp"},
+        filetypes = { "swift" },
+        root_markers = {
+          "Package.swift",
+          ".git",
+          "*.xcodeproj",
+          "*.xcworkspace",
+        }
+      })
+      vim.lsp.enable("sourcekit")
+
       -- LSP keymaps (buffer-local, only when an LSP actually attaches)
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("LspKeymaps", { clear = true }),
