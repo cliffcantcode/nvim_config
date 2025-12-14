@@ -20,9 +20,6 @@ require 'lazy-bootstrap'
 -- [[ Configure and install plugins ]]
 require 'lazy-plugins'
 
--- [[ Smooth scrolling for awareness of location ]]
-require 'smooth_scrolling'
-
 -- [[ Switch based on common pairs ]]
 require 'mini_switch'
 
