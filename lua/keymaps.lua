@@ -71,5 +71,8 @@ end
 vim.keymap.set("n", "<leader>dn", function() multiply_number_under_cursor(2.0) end, { desc = "[d]ouble number under cursor" })
 vim.keymap.set("n", "<leader>hn", function() multiply_number_under_cursor(0.5) end, { desc = "[h]alve  number under cursor" })
 
+vim.keymap.set("n", "]q", "<cmd>cnext<cr>", { desc = "Quickfix next" })
+vim.keymap.set("n", "[q", "<cmd>cprev<cr>", { desc = "Quickfix prev" })
+
 -- vim: ts=2 sts=2 sw=2 et
 
