@@ -87,7 +87,6 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     pcall(vim.cmd, "silent undojoin")
 
     -- 1) Trim trailing whitespace.
-    What is the e doing here?
     vim.cmd([[silent keepjumps keeppatterns %s/\s\+$//e]])
 
     -- 2) Put a newline at the end of the file.

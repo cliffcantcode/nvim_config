@@ -8,7 +8,7 @@ return {
     },
     opts = {},
     keys = {
-      { "<leader>tmd", function() require("render-markdown").toggle() end, ft = "markdown", desc = "[t]oggle [m]ark[d]own rendering." },
+      { "<leader>tm", function() require("render-markdown").toggle() end, ft = "markdown", desc = "[t]oggle [m]arkdown rendering." },
     },
   },
 }

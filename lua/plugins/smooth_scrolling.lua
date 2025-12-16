@@ -4,6 +4,6 @@ return {
     require('neoscroll').setup { easing = 'quadratic' }
   end,
 
-  'joeytwiddle/sexy_scroller.vim',
+  -- { 'joeytwiddle/sexy_scroller.vim' },
 }
 
