@@ -69,33 +69,14 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
   end,
 })
 
+-- Multiple file cleaning steps done in a single save pass.
 vim.api.nvim_create_autocmd("BufWritePre", {
-  group = vim.api.nvim_create_augroup("EnsureFinalNewline", { clear = true }),
-  pattern = { "*.zig", "*.c", "*.cpp", "*.lua", "*.md", "*.txt", "*.json", "*.toml", "*.vim", "*.py" },
-  callback = function()
-    local bufnr = vim.api.nvim_get_current_buf()
-    local line_count = vim.api.nvim_buf_line_count(bufnr)
-    
-    if line_count == 0 then return end
-
-    local last_line = vim.api.nvim_buf_get_lines(bufnr, line_count - 1, line_count, false)[1]
-
-    if last_line ~= "" then
-      local view = vim.fn.winsaveview()
-      vim.api.nvim_buf_set_lines(bufnr, line_count, line_count, false, { "" })
-      vim.fn.winrestview(view)
-    end
-  end,
-})
-
--- Remove trailing whitespace safely on save
-vim.api.nvim_create_autocmd("BufWritePre", {
-  group = vim.api.nvim_create_augroup("TrimWhitespace", { clear = true }),
+  desc = "Clean on save: - Ensure newline at end of file. - Remove white space from end of lines.",
+  group = vim.api.nvim_create_augroup("CleanOnSave", { clear = true }),
   pattern = "*",
   callback = function(args)
     local bufnr = args.buf
 
-    -- Skip special/readonly buffers
     if vim.bo[bufnr].buftype ~= "" then return end
     if not vim.bo[bufnr].modifiable then return end
     if vim.bo[bufnr].readonly then return end
@@ -105,8 +86,24 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     -- Try to join with previous undo block (ok if it fails)
     pcall(vim.cmd, "silent undojoin")
 
-    -- Now actually trim trailing whitespace
+    -- 1) Trim trailing whitespace.
+    What is the e doing here?
     vim.cmd([[silent keepjumps keeppatterns %s/\s\+$//e]])
+
+    -- 2) Put a newline at the end of the file.
+    local name = vim.api.nvim_buf_get_name(bufnr)
+    local ext = vim.fn.fnamemodify(name, ":e")
+    local files_that_want_newline = {zig = true, c = true, cpp = true, lua = true, md = true, txt = true, json = true, toml = true, vim = true, py = true}
+
+    if files_that_want_newline[ext] then
+      local line_count = vim.api.nvim_buf_line_count(bufnr)
+      if line_count > 0 then
+        local last_line = vim.api.nvim_buf_get_lines(bufnr, line_count - 1, line_count, false)[1]
+        if last_line ~= "" then
+          vim.api.nvim_buf_set_lines(bufnr, line_count, line_count, false, { "" })
+        end
+      end
+    end
 
     vim.fn.winrestview(view)
   end,
