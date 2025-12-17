@@ -23,6 +23,7 @@ M.filetype_replacements = {
   },
   zig = {
     ["%f[%w]cont%f[%s]"] = "const",
+    -- ["Ste"] = "Step", -- TODO: Fix: const CopySwiftSte = struct {
   },
 }
 
