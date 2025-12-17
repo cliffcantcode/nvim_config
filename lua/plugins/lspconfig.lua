@@ -27,12 +27,14 @@ return {
         capabilities = capabilities,
         cmd = { "xcrun", "sourcekit-lsp"},
         filetypes = { "swift" },
-        root_markers = {
+        root_dir = vim.fs.root(0, {
           "Package.swift",
           ".git",
           "*.xcodeproj",
           "*.xcworkspace",
-        }
+        }),
+
+        single_file_support = true,
       })
       vim.lsp.enable("sourcekit")
 
