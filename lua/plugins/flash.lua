@@ -10,8 +10,8 @@ return {
       autojump = true,
     },
     label = {
-      after = true,
-      before = false,
+      after = false,
+      before = true,
     },
     modes = {
       char = { enabled = true },
