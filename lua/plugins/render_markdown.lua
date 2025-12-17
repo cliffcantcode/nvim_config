@@ -15,7 +15,7 @@ return {
           vim.wo.number = false
           vim.wo.relativenumber = false
           vim.wo.signcolumn = "no"
-          vim.wo.cursorline = false
+          vim.wo.cursorline = true
           vim.bo.textwidth = 80          -- used by gq / formatting
           vim.wo.conceallevel = 2        -- hide markup noise a bit
           vim.wo.concealcursor = "nc"    -- keep it readable while moving
