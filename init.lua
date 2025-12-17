@@ -5,6 +5,19 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
+-- Disable tree-sitter completely for Swift files
+-- Needs to be loaded before plugins.
+vim.api.nvim_create_autocmd({ "BufReadPre", "FileType" }, {
+  pattern = "swift",
+  callback = function(args)
+    -- Prevent Neovim from trying TS at all
+    vim.b[args.buf].ts_disable = true
+
+    -- Stop any TS parser if it started
+    pcall(vim.treesitter.stop, args.buf)
+  end,
+})
+
 -- [[ Setting options ]]
 require 'options'
 

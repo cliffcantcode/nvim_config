@@ -8,11 +8,12 @@ return {
     opts = {
       ensure_installed = { 'zig', 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
       -- Autoinstall languages that are not installed
-      auto_install = true,
+      auto_install = false,
       highlight = {
         enable = true,
+        disable = { 'swift' },
       },
-      indent = { enable = true, disable = { 'sql' } },
+      indent = { enable = true, disable = { 'sql', 'swift' } },
       textobjects = {
         select = {
           enable = true,
