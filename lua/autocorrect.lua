@@ -16,6 +16,8 @@ M.replacements = {
   ["sount"] = "sound",
   ["Sount"] = "Sound",
   ["Aloc"] = "Alloc",
+  ["Dispaly"] = "Display",
+  ["gaurd"] = "guard",
 }
 
 M.filetype_replacements = {
@@ -123,33 +125,43 @@ function M.run_tests()
   local tests = {
     {
       ft = "zig",
-      input = "pub fn foo(cont x: i32) void {}",
+      mistaken = "pub fn foo(cont x: i32) void {}",
       expected = "pub fn foo(const x: i32) void {}",
     },
     {
       ft = "zig",
-      input = "const CopySwiftSte = struct {",
+      mistaken = "const CopySwiftSte = struct {",
       expected = "const CopySwiftStep = struct {",
     },
     {
       ft = "zig",
-      input = 'std.fs.cwd().acces("A_Game", .{}) catch {',
+      mistaken = 'std.fs.cwd().acces("A_Game", .{}) catch {',
       expected = 'std.fs.cwd().access("A_Game", .{}) catch {',
     },
     {
       ft = "zig",
-      input = "std.fs.cwd().access(path, .{})",
+      mistaken = "std.fs.cwd().access(path, .{})",
       expected = "std.fs.cwd().access(path, .{})",
     },
     {
       ft = "any",
-      input = "Backgroun ",
+      mistaken = "Backgroun ",
       expected = "Background ",
     },
     {
       ft = "any",
-      input = "Aloc ",
+      mistaken = "Aloc ",
       expected = "Alloc ",
+    },
+    {
+      ft = "any",
+      mistaken = "setNeedsDispaly(bounds)",
+      expected = "setNeedsDisplay(bounds)",
+    },
+    {
+      ft = "any",
+      mistaken = "gaurd let buffer = ",
+      expected = "guard let buffer = ",
     },
   }
 
@@ -160,12 +172,12 @@ function M.run_tests()
       M.filetype_replacements[t.ft] or {}
     )
 
-    local out = apply_rules_to_line(t.input, rules)
+    local out = apply_rules_to_line(t.mistaken, rules)
 
     if out ~= t.expected then
       error(
         "[autocorrect test failed]\n"
-        .. "Input:    " .. t.input .. "\n"
+        .. "Input:    " .. t.mistaken .. "\n"
         .. "Expected: " .. t.expected .. "\n"
         .. "Got:      " .. out
       )
