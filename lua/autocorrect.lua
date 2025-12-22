@@ -18,6 +18,7 @@ M.replacements = {
   ["Aloc"] = "Alloc",
   ["Dispaly"] = "Display",
   ["gaurd"] = "guard",
+  ["amound"] = "amount",
 }
 
 M.filetype_replacements = {
@@ -162,6 +163,11 @@ function M.run_tests()
       ft = "any",
       mistaken = "gaurd let buffer = ",
       expected = "guard let buffer = ",
+    },
+    {
+      ft = "any",
+      mistaken = "base_amound: i32",
+      expected = "base_amount: i32",
     },
   }
 

@@ -48,6 +48,8 @@ local ft_defaults = {
           { "init", "deinit" }, },
   cpp = { { ".", "->" },
           { "struct", "enum" }, },
+  sql = { { "where", "and" },
+          { "inner", "left", "right"}, }, -- TODO: We should make file based rules override general ones.
 }
 
 local buf_state = setmetatable({}, { __mode = "k" })
