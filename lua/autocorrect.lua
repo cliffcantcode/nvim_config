@@ -19,6 +19,7 @@ M.replacements = {
   ["Dispaly"] = "Display",
   ["gaurd"] = "guard",
   ["amound"] = "amount",
+  ["unsinged"] = "unsigned",
 }
 
 M.filetype_replacements = {
@@ -168,6 +169,11 @@ function M.run_tests()
       ft = "any",
       mistaken = "base_amound: i32",
       expected = "base_amount: i32",
+    },
+    {
+      ft = "any",
+      mistaken = "unsinged int",
+      expected = "unsigned int",
     },
   }
 
