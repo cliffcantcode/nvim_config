@@ -1,5 +1,5 @@
 local M = {}
-
+-- TODO: Fix localPoint.x -> localPoint.y
 M.dimension_exclusion_list = {
   MAX = true,
   max = true,
@@ -119,7 +119,18 @@ local function transform_token(tok, cycle_map)
   return transform_segment(tok, cycle_map)
 end
 
+local function cycle_dot_access(text, cycle_map)
+  return text:gsub("%.(%a)", function(axis)
+    if axis == "x" or axis == "y" or axis == "z" then
+      return "." .. cycle_lower_axis_char(cycle_map, axis)
+    end
+    return "." .. axis
+  end)
+end
+
 local function cycle_dimensions_line(text, cycle_map)
+  text = cycle_dot_access(text, cycle_map)
+
   return text:gsub("[%w_]+", function(tok)
     return transform_token(tok, cycle_map)
   end)
@@ -163,6 +174,7 @@ local function run_tests()
     { "MAX_X",        "MAX_Y",        f },
     { "max_x",        "max_y",        f },
     { "index",        "index",        f },
+    { "localPoint.x", "localPoint.y", f },
 
     -- multi-match in one token
     { "z_to_x",       "x_to_y",       f },
