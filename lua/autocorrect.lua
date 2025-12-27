@@ -20,6 +20,7 @@ M.replacements = {
   ["gaurd"] = "guard",
   ["amound"] = "amount",
   ["unsinged"] = "unsigned",
+  ["Pinter"] = "Pointer",
 }
 
 M.filetype_replacements = {
@@ -33,6 +34,9 @@ M.filetype_replacements = {
     ["%f[%w]cont%f[%s]"] = "const",
     ["Ste%f[%W]"] = "Step",
     ["acces([^s])"] = "access%1",
+  },
+  swift = {
+    ["pointtee"] = "pointee",
   },
 }
 
@@ -174,6 +178,16 @@ function M.run_tests()
       ft = "any",
       mistaken = "unsinged int",
       expected = "unsigned int",
+    },
+    {
+      ft = "any",
+      mistaken = "UnsafeMutablePinter",
+      expected = "UnsafeMutablePointer",
+    },
+    {
+      ft = "swift",
+      mistaken = "buffer.pointtee",
+      expected = "buffer.pointee",
     },
   }
 
