@@ -17,6 +17,7 @@ return {
         },
         COMPRESS = {
           color = '#cba6f7', -- COMPRESS: Mauve
+          alt = { 'REFACTOR' },
         },
         STUDY = {
           color = '#fab387', -- STUDY: Peach
@@ -29,3 +30,4 @@ return {
   },
 }
 -- vim: ts=2 sts=2 sw=2 et
+

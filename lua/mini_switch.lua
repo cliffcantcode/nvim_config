@@ -50,6 +50,7 @@ local ft_defaults = {
           { "struct", "enum" }, },
   sql = { { "where", "and" },
           { "inner", "left", "right"}, }, -- TODO: We should make file based rules override general ones.
+  swift = { { "let", "var" }, },
 }
 
 local buf_state = setmetatable({}, { __mode = "k" })
