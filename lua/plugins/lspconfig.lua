@@ -12,6 +12,12 @@ return {
 
       vim.lsp.config("zls", {
         capabilities = capabilities,
+        root_dir = vim.fs.root(0, {
+          "build.zig",
+          "build.zig.zon",
+          ".git",
+        }),
+        single_file_support = true,
         settings = {
           zls = {
             enable_snippets = true,
@@ -52,6 +58,7 @@ return {
           end
 
           map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
+          map('<leader>gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
           map("<leader>ds", require('telescope.builtin').lsp_document_symbols, '[d]ocument [s]ymbols')
           map('<leader>gt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
           map("<leader>th", function()
@@ -94,7 +101,7 @@ return {
   { "L3MON4D3/LuaSnip", version = "v2.*" },
 }
 
--- TODO: Fix this somehow?
+-- TODO: Remove this once it stops providing ideas.
 -- return {
 --   {
 --     -- `lazydev` configures Lua LSP for your Neovim config, runtime and plugins
