@@ -1,5 +1,4 @@
 local M = {}
--- TODO: Fix localPoint.x -> localPoint.y
 M.dimension_exclusion_list = {
   MAX = true,
   max = true,

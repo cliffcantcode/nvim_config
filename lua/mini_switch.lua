@@ -49,7 +49,7 @@ local ft_defaults = {
   cpp = { { ".", "->" },
           { "struct", "enum" }, },
   sql = { { "where", "and" },
-          { "inner", "left", "right"}, }, -- TODO: We should make file based rules override general ones.
+          { "inner", "left", "right"}, },
   swift = { { "let", "var" }, },
 }
 
@@ -57,14 +57,30 @@ local buf_state = setmetatable({}, { __mode = "k" })
 
 local function build_index(defs)
   local idx = {}
+  local keys = {}
+  local seen = {}
+
   for _, cycle in ipairs(defs) do
     local clean = {}
     for i = 1, #cycle do clean[i] = tostring(cycle[i]) end
     for i = 1, #clean do
-      idx[clean[i]] = { list = clean, pos = i }
+      local k = clean[i]
+      idx[k] = { list = clean, pos = i }
+
+      if not seen[k] then
+        seen[k] = true
+        table.insert(keys, k)
+      end
     end
   end
-  return idx
+
+  local keys_sorted = vim.deepcopy(keys)
+  table.sort(keys_sorted, function(a, b)
+    if #a ~= #b then return #a > #b end
+    return a < b
+  end)
+
+  return idx, keys_sorted
 end
 
 local function get_defs_for_buf(bufnr)
@@ -74,12 +90,12 @@ local function get_defs_for_buf(bufnr)
   local ft = vim.bo[bufnr].filetype
   local merged = {}
 
-  if ft and ft_defaults[ft] then
-    for _, c in ipairs(ft_defaults[ft]) do table.insert(merged, c) end
-  end
-
   if vim.g.switch_custom_definitions then
     for _, c in ipairs(vim.g.switch_custom_definitions) do table.insert(merged, c) end
+  end
+
+  if ft and ft_defaults[ft] then
+    for _, c in ipairs(ft_defaults[ft]) do table.insert(merged, c) end
   end
 
   return merged
@@ -101,11 +117,14 @@ local function ensure_buf_index(bufnr)
   end
 
   if not st or not same_defs(st.defs, defs) then
+    local index, keys_sorted = build_index(defs)
     buf_state[bufnr] = {
       defs = defs,
-      index = build_index(defs),
+      index = index,
+      keys_sorted = keys_sorted,
     }
   end
+
   return buf_state[bufnr]
 end
 
@@ -199,7 +218,8 @@ local function switch_text(bufnr, row, start_col, end_col, text)
   local replacement = nil
   if not entry then
     -- Search for substring under the cursor
-    for k, v in pairs(st.index) do
+    for _, k in ipairs(st.keys_sorted or {}) do
+      local v = st.index[k]
       local start_pos, end_pos = word:find(k, 1, true)
       while start_pos do
         if cursor_pos >= start_pos and cursor_pos <= end_pos then

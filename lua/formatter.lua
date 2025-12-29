@@ -4,16 +4,6 @@ local M = {}
 -- Semicolon fixer for container declarations
 ---------------------------------------------------------------------------
 
--- TODO: Fix this case where there is a common where the semicolon would go.
--- pub fn create(
---     b: *std.Build,
---     options: struct {
---         name: [] const u8,
---         out_name: []const u8,
---         input_a: LazyPath,
---         input_b: LazyPath,
---     };,
--- ) *@This() {
 vim.api.nvim_create_autocmd("BufWritePre", {
   desc = "Ensure container declarations end with a semicolon (Zig via TS, C-like via heuristic)",
   group = vim.api.nvim_create_augroup("ContainerSemicolonFix", { clear = true }),
