@@ -58,9 +58,11 @@ return {
           end
 
           map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
-          map('<leader>gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
-          map("<leader>ds", require('telescope.builtin').lsp_document_symbols, '[d]ocument [s]ymbols')
+          map('<leader>gd', require('telescope.builtin').lsp_definitions,      '[G]oto [D]efinition')
+          map('<leader>gr', require('telescope.builtin').lsp_references,       '[G]oto [R]eferences')
           map('<leader>gt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
+          map('<leader>gi', require('telescope.builtin').lsp_implementations,  '[G]oto [I]mplementations')
+          map("<leader>ds", require('telescope.builtin').lsp_document_symbols, '[d]ocument [s]ymbols')
           map("<leader>th", function()
             local ih = vim.lsp.inlay_hint
             if not ih then return end
