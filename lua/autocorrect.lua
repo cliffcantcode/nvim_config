@@ -21,6 +21,7 @@ M.replacements = {
   ["amound"] = "amount",
   ["unsinged"] = "unsigned",
   ["Pinter"] = "Pointer",
+  ["TOOD:"] = "TODO:",
 }
 
 M.filetype_replacements = {
@@ -183,6 +184,11 @@ function M.run_tests()
       ft = "any",
       mistaken = "UnsafeMutablePinter",
       expected = "UnsafeMutablePointer",
+    },
+    {
+      ft = "any",
+      mistaken = "TOOD:",
+      expected = "TODO:",
     },
     {
       ft = "swift",
