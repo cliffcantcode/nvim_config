@@ -21,7 +21,11 @@ M.replacements = {
   ["amound"] = "amount",
   ["unsinged"] = "unsigned",
   ["Pinter"] = "Pointer",
+<<<<<<< HEAD
   ["TOOD:"] = "TODO:",
+=======
+  ["volumne"] = "volume",
+>>>>>>> 1359430 (Syncing git.)
 }
 
 M.filetype_replacements = {
@@ -38,6 +42,7 @@ M.filetype_replacements = {
   },
   swift = {
     ["pointtee"] = "pointee",
+    ["Visisible"] = "Visible",
   },
 }
 
@@ -194,6 +199,16 @@ function M.run_tests()
       ft = "swift",
       mistaken = "buffer.pointtee",
       expected = "buffer.pointee",
+    },
+    {
+      ft = "swift",
+      mistaken = "self.window?.isVisisible",
+      expected = "self.window?.isVisible",
+    },
+    {
+      ft = "any",
+      mistaken = "self.tone_volumne = volume",
+      expected = "self.tone_volume = volume",
     },
   }
 

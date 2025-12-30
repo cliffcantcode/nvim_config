@@ -41,6 +41,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "u64", "i64" },
   { "on", "off" },
   { "'", '"' },
+  { "initial", "desired", "current" },
 }
 
 local ft_defaults = {
