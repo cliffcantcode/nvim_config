@@ -21,11 +21,8 @@ M.replacements = {
   ["amound"] = "amount",
   ["unsinged"] = "unsigned",
   ["Pinter"] = "Pointer",
-<<<<<<< HEAD
   ["TOOD:"] = "TODO:",
-=======
   ["volumne"] = "volume",
->>>>>>> 1359430 (Syncing git.)
 }
 
 M.filetype_replacements = {
