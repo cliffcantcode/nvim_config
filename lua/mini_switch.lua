@@ -51,7 +51,8 @@ local ft_defaults = {
           { "struct", "enum" }, },
   sql = { { "where", "and" },
           { "inner", "left", "right"}, },
-  swift = { { "let", "var" }, },
+  swift = { { "let", "var" },
+            { "insert", "remove" }, },
 }
 
 local buf_state = setmetatable({}, { __mode = "k" })
