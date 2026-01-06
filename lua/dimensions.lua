@@ -12,6 +12,7 @@ M.cycles = {
   { "X",  "Y",  "Z"  },
   { "_x", "_y", "_z" },
   { "x_", "y_", "z_" },
+  { "dx", "dy", "dz" },
 }
 
 local forward_cycle_map = {}
@@ -119,12 +120,17 @@ local function transform_token(tok, cycle_map)
 end
 
 local function cycle_dot_access(text, cycle_map)
-  return text:gsub("%.(%a)", function(axis)
-    if axis == "x" or axis == "y" or axis == "z" then
-      return "." .. cycle_lower_axis_char(cycle_map, axis)
-    end
-    return "." .. axis
+  -- Match .x followed by end of string
+  text = text:gsub("%.([xyz])$", function(axis)
+    return "." .. cycle_lower_axis_char(cycle_map, axis)
   end)
+
+  -- Match .x followed by non-word character
+  text = text:gsub("%.([xyz])([^%w_])", function(axis, suffix)
+    return "." .. cycle_lower_axis_char(cycle_map, axis) .. suffix
+  end)
+
+  return text
 end
 
 local function cycle_dimensions_line(text, cycle_map)
@@ -162,6 +168,8 @@ local function run_tests()
     { "value_x",      "value_y",      f },
     { "value_z",      "value_x",      f },
     { "Y",            "Z",            f },
+    { "localPoint.x", "localPoint.y", f },
+    { "self.x_offset += dx;", "self.y_offset += dy;", f},
 
     -- backward cycles
     { "value_x",      "value_z",      b },
@@ -173,7 +181,6 @@ local function run_tests()
     { "MAX_X",        "MAX_Y",        f },
     { "max_x",        "max_y",        f },
     { "index",        "index",        f },
-    { "localPoint.x", "localPoint.y", f },
 
     -- multi-match in one token
     { "z_to_x",       "x_to_y",       f },

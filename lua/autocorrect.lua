@@ -23,6 +23,7 @@ M.replacements = {
   ["Pinter"] = "Pointer",
   ["TOOD:"] = "TODO:",
   ["volumne"] = "volume",
+  ["Visibale"] = "Visible"
 }
 
 M.filetype_replacements = {
