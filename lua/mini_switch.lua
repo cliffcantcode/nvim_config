@@ -42,6 +42,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "on", "off" },
   { "'", '"' },
   { "initial", "desired", "current" },
+  { "get", "set" },
 }
 
 local ft_defaults = {
@@ -50,7 +51,8 @@ local ft_defaults = {
   cpp = { { ".", "->" },
           { "struct", "enum" }, },
   sql = { { "where", "and" },
-          { "inner", "left", "right"}, },
+          { "inner", "left", "right"},
+          { "group", "order"}, },
   swift = { { "let", "var" },
             { "insert", "remove" }, },
 }
