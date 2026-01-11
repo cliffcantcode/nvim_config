@@ -105,6 +105,7 @@ local function transform_token(tok, cycle_map)
         local tail = tok:sub(ex_len + 2) -- after "EX_"
 
         local new_tail
+
         -- Special case: single lowercase axis char (x/y/z) like max_x
         if tail:match("^[xyz]$") then
           new_tail = cycle_lower_axis_char(cycle_map, tail)
@@ -119,7 +120,7 @@ local function transform_token(tok, cycle_map)
   return transform_segment(tok, cycle_map)
 end
 
-local function cycle_dot_access(text, cycle_map)
+local function cycle_access(text, cycle_map)
   -- Match .x followed by end of string
   text = text:gsub("%.([xyz])$", function(axis)
     return "." .. cycle_lower_axis_char(cycle_map, axis)
@@ -130,11 +131,16 @@ local function cycle_dot_access(text, cycle_map)
     return "." .. cycle_lower_axis_char(cycle_map, axis) .. suffix
   end)
 
+  -- Match " x" followed by end of string
+  text = text:gsub("(%s)([xyz])$", function(ws, axis)
+    return ws .. cycle_lower_axis_char(cycle_map, axis)
+  end)
+
   return text
 end
 
 local function cycle_dimensions_line(text, cycle_map)
-  text = cycle_dot_access(text, cycle_map)
+  text = cycle_access(text, cycle_map)
 
   return text:gsub("[%w_]+", function(tok)
     return transform_token(tok, cycle_map)
@@ -170,6 +176,8 @@ local function run_tests()
     { "Y",            "Z",            f },
     { "localPoint.x", "localPoint.y", f },
     { "self.x_offset += dx;", "self.y_offset += dy;", f},
+    -- TODO: We need the dimensions to rotate if they are alone at the end of a line.
+    { "= x",          "= y",          f },
 
     -- backward cycles
     { "value_x",      "value_z",      b },
