@@ -136,6 +136,11 @@ local function cycle_access(text, cycle_map)
     return ws .. cycle_lower_axis_char(cycle_map, axis)
   end)
 
+  -- Match " x" followed by close parens ")"
+  text = text:gsub("(%s)([xyz])(%))", function(ws, axis, suffix)
+    return ws .. cycle_lower_axis_char(cycle_map, axis) .. suffix
+  end)
+
   return text
 end
 
@@ -171,13 +176,14 @@ local function run_tests()
 
   local tests = {
     -- forward cycles
-    { "value_x",      "value_y",      f },
-    { "value_z",      "value_x",      f },
-    { "Y",            "Z",            f },
-    { "localPoint.x", "localPoint.y", f },
+    { "value_x",       "value_y",       f },
+    { "value_z",       "value_x",       f },
+    { "Y",             "Z",             f },
+    { "localPoint.x",  "localPoint.y",  f },
     { "self.x_offset += dx;", "self.y_offset += dy;", f},
     -- TODO: We need the dimensions to rotate if they are alone at the end of a line.
-    { "= x",          "= y",          f },
+    { "= x",           "= y",           f },
+    { "min(min_x, x)", "min(min_y, y)", f },
 
     -- backward cycles
     { "value_x",      "value_z",      b },
