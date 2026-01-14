@@ -50,7 +50,8 @@ local ft_defaults = {
   cpp = { { ".", "->" },
           { "struct", "enum" }, },
   sql = { { "where", "and" },
-          { "inner", "left", "right"}, },
+          { "inner", "left", "right"},
+          { "group", "order"}, },
   swift = { { "let", "var" },
             { "insert", "remove" }, },
 }
