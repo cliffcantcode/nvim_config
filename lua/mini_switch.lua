@@ -19,6 +19,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "x", "y", "z" },
   { "New", "Old" },
   { ":", ";" },
+  { "upper", "lower" },
   { "High", "Low" },
   { "high", "low" },
   { "RIGHT", "LEFT" },
