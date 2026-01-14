@@ -42,6 +42,9 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "on", "off" },
   { "'", '"' },
   { "initial", "desired", "current" },
+  { "get", "set" },
+  { "north", "south" },
+  { "east", "west" },
 }
 
 local ft_defaults = {
