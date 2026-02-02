@@ -28,6 +28,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "permanent", "transient" },
   { "kibi", "mebi", "gibi", "tibi" },
   { "kilo", "mega", "giga", "tera" },
+  { "UP", "DOWN" },
   { "Up", "Down" },
   { "up", "down" },
   { "Old", "New" },
@@ -47,6 +48,10 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "get", "set" },
   { "north", "south" },
   { "east", "west" },
+  { "North", "South" },
+  { "East", "West" },
+  { "NORTH", "SOUTH" },
+  { "EAST", "WEST" },
 }
 
 local ft_defaults = {
