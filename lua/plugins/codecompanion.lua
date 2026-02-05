@@ -7,6 +7,14 @@ return {
     },
     config = function()
     require("codecompanion").setup({
+      rules = {
+        default = {
+          description = "Default rules.",
+          files = {
+            ".codecompanion_rules/default_rules.md",
+          },
+        },
+      },
       display = {
         inline = {
           diff = {
