@@ -9,9 +9,9 @@ return {
     require("codecompanion").setup({
       rules = {
         default = {
-          description = "Default rules.",
+          description = "All the rules for a given project.",
           files = {
-            ".codecompanion_rules/default_rules.md",
+            "codecompanion_rules/*.md",
           },
         },
       },
@@ -29,6 +29,10 @@ return {
         chat = {
           adapter = "ollama",
           model = "qwen2.5-coder:14b",
+          system_prompt = [[
+            You are a top expert in your field with a lifetime of practical experience. Today you are working as a programming assistant embedded in this developer's Neovim. Here are rules you must follow:
+            - If a request is ambiguous, ask one clarifying question.
+          ]]
         },
         inline = {
           adapter = "ollama",
@@ -59,7 +63,7 @@ return {
   keys = {
     {
       '<leader>ac',
-      '<cmd>CodeCompanionChat #{buffer} #{lsp} #{clipboard} Hello! Be practical and concise. <cr>',
+      '<cmd>CodeCompanionChat #{buffer} #{lsp} #{clipboard}<cr>',
       mode = { "n", "v" },
       desc = 'Open an [a]ssitant [c]hat.',
     },
