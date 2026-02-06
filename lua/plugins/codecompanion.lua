@@ -29,10 +29,6 @@ return {
         chat = {
           adapter = "ollama",
           model = "qwen2.5-coder:14b",
-          system_prompt = [[
-            You are a top expert in your field with a lifetime of practical experience. Today you are working as a programming assistant embedded in this developer's Neovim. Here are rules you must follow:
-            - If a request is ambiguous, ask one clarifying question.
-          ]]
         },
         inline = {
           adapter = "ollama",
@@ -63,7 +59,7 @@ return {
   keys = {
     {
       '<leader>ac',
-      '<cmd>CodeCompanionChat #{buffer} #{lsp} #{clipboard}<cr>',
+      '<cmd>CodeCompanionChat #{buffer} #{lsp} #{clipboard} This is only to initialize the mode, only respond with "Ready!" when ready.<cr>',
       mode = { "n", "v" },
       desc = 'Open an [a]ssitant [c]hat.',
     },
