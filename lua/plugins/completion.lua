@@ -56,15 +56,49 @@ return {
         command = opts.ollama_cmd,
         args = { "generate", opts.model, prompt, "--format", "json" },
         on_stdout = function(_, line) table.insert(out, line) end,
-        on_exit = function()
-          local resp = table.concat(out, "\n")
+        on_exit = function(j, return_val)
+          if return_val ~= 0 then
+            print("CURL ERROR: Exit code " .. return_val)
+            cb(nil)
+            return
+          end
+
+          -- Use empty string separator to avoid breaking JSON syntax with newlines
+          local resp = table.concat(j:result(), "")
+
+          if resp == "" then
+            print("API ERROR: Empty response from Ollama")
+            cb(nil)
+            return
+          end
+
           local ok, dec = pcall(vim.fn.json_decode, resp)
+
           if ok and dec then
-            local text = dec.response or dec.content or ""
-            text = text:gsub("^%s+", ""):gsub("%s+$", "")
+            local text = dec.response or ""
+
+            -- 1. Strip Markdown code blocks (e.g., ```zig ... ```)
             text = text:gsub("```[%w]*\n?", ""):gsub("```", "")
+
+            -- 2. Strip leading/trailing whitespace
+            text = vim.trim(text)
+
+            -- 3. Strip the prefix if the LLM repeated it in the response
+            -- We extract the prefix from the original prompt 'p'
+            local prompt_prefix = p:match("Prefix:%s*([^\n]+)") or ""
+            local clean_prompt_prefix = vim.trim(prompt_prefix)
+
+            if text:sub(1, #clean_prompt_prefix) == clean_prompt_prefix then
+              text = text:sub(#clean_prompt_prefix + 1)
+            end
+
+            -- Final trim to ensure we aren't inserting leading spaces into existing code
+            text = vim.trim(text)
+
+            -- 4. Send the cleaned completion back to the callback
             cb(text)
           else
+            print("JSON DECODE ERROR: " .. resp)
             cb(nil)
           end
         end,
@@ -114,21 +148,77 @@ return {
       local prompt = build_prompt(recent, prefix)
       print("PROMPT: " .. prompt)
 
-      -- RESUME: Get ollama to start so there is a model for autocomplete.
-      call_ollama(prompt, function(text)
-        print("OLLAMA CALLBACK - text: " .. (text or "nil"))  -- Add this
-        if not text or text == "" then
-          print("NO TEXT FROM OLLAMA")  -- Add this
+      local function perform_call(p, cb)
+        local body = vim.fn.json_encode({
+          model = opts.model,
+          prompt = p,
+          stream = false,
+          options = { num_predict = 64, temperature = 0.2 }
+        })
+
+        Job:new({
+          command = "curl",
+          args = { "-s", "-X", "POST", "http://localhost:11434/api/generate",
+                   "-H", "Content-Type: application/json", "-d", body },
+          on_exit = function(j, return_val)
+            if return_val ~= 0 then return cb(nil) end
+
+            -- Use empty string separator to avoid breaking JSON syntax
+            local resp = table.concat(j:result(), "")
+            local ok, dec = pcall(vim.fn.json_decode, resp)
+
+            if ok and dec then
+              local text = dec.response or ""
+              -- 1. Strip Markdown blocks
+              text = text:gsub("```[%w]*\n?", ""):gsub("```", "")
+              -- 2. Strip leading/trailing whitespace
+              text = vim.trim(text)
+
+              local prompt_prefix = p:match("Prefix:%s*([^\n]+)") or ""
+              local clean_prompt_prefix = vim.trim(prompt_prefix)
+              local clean_text = vim.trim(text)
+
+              -- We check both the full prefix and just the current word
+              if clean_text:sub(1, #clean_prompt_prefix) == clean_prompt_prefix then
+                  text = clean_text:sub(#clean_prompt_prefix + 1)
+              elseif clean_text:sub(1, #current_word) == current_word then
+                  text = clean_text:sub(#current_word + 1)
+              else
+                  text = clean_text
+              end
+
+              cb(text)
+            else
+              cb(nil)
+            end
+          end,
+        }):start()
+      end
+
+      perform_call(prompt, function(completion)
+        if not completion or completion == "" then
           return callback({ items = {}, isIncomplete = false })
         end
-        local single = text:gsub("\n", " ")
-        print("RETURNING COMPLETION: " .. single)  -- Add this
-        cache_set(prefix, single)
-        callback({
-          items = {{ label = single, insertText = single }},
-          isIncomplete = false
-        })
+
+        cache_set(prefix, completion)
+
+        vim.schedule(function()
+          callback({
+            items = {{
+              label = prefix .. completion, -- Shows the full line in the menu
+              fileterText = prefix,
+              insertText = completion,      -- Only inserts the new part
+              detail = "Ollama (" .. opts.model .. ")",
+              kind = 1, -- Text icon
+            }},
+            isIncomplete = false
+          })
+        end)
       end)
+
+      -- Return true to tell cmp we are working asynchronously
+      return { isIncomplete = true }
+
     end
 
     -- Register source
@@ -153,7 +243,7 @@ return {
         ["<C-p>"] = cmp.mapping.select_prev_item(),
       }),
       sources = {
-        { name = "local_llm", keyword_length = 0 },
+        { name = "local_llm", keyword_length = 1 },
         { name = "nvim_lsp" },
         { name = "luasnip" },
         { name = "buffer" },
