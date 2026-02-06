@@ -59,7 +59,7 @@ return {
   keys = {
     {
       '<leader>ac',
-      '<cmd>CodeCompanionChat #{buffer} #{lsp} #{clipboard} This is only to initialize the mode, only respond with "Ready!" when ready.<cr>',
+      '<cmd>CodeCompanionChat #{buffer} #{lsp} #{clipboard} This is only to initialize the model, only respond with "Ready!" when ready.<cr>',
       mode = { "n", "v" },
       desc = 'Open an [a]ssitant [c]hat.',
     },

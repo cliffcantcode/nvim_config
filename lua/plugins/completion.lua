@@ -81,10 +81,13 @@ return {
     function llm_source:get_debug_name() return "local_llm" end
 
     function llm_source:complete(request, callback)
+      print("LLM COMPLETE CALLED.")
       local ctx = request.context
       local bufnr = ctx.bufnr
       local row = ctx.cursor.row
       local col = ctx.cursor.col
+
+      print(string.format("bufnr=%s, row=%s, col=%s", bufnr, row, col))
 
       local start_line = math.max(0, row - opts.context_lines - 1)
       local recent_lines = vim.api.nvim_buf_get_lines(bufnr, start_line, row - 1, false)
@@ -92,24 +95,34 @@ return {
       local line = vim.api.nvim_buf_get_lines(bufnr, row - 1, row, false)[1] or ""
       local prefix = line:sub(1, col - 1)
 
+      print(string.format("prefix='%s'", prefix))
+
       if prefix == "" then
         return callback({ items = {}, isIncomplete = false })
       end
 
       local cached = cache_get(prefix)
       if cached then
+        print("CACHE HIT: " .. cached)
         return callback({
           items = {{ label = cached, insertText = cached }},
           isIncomplete = false
         })
       end
 
+      print("CACHE MISS - CALLING OLLAMA")
       local prompt = build_prompt(recent, prefix)
+      print("PROMPT: " .. prompt)
+
+      -- RESUME: Get ollama to start so there is a model for autocomplete.
       call_ollama(prompt, function(text)
+        print("OLLAMA CALLBACK - text: " .. (text or "nil"))  -- Add this
         if not text or text == "" then
+          print("NO TEXT FROM OLLAMA")  -- Add this
           return callback({ items = {}, isIncomplete = false })
         end
         local single = text:gsub("\n", " ")
+        print("RETURNING COMPLETION: " .. single)  -- Add this
         cache_set(prefix, single)
         callback({
           items = {{ label = single, insertText = single }},
@@ -123,6 +136,9 @@ return {
 
     -- Setup cmp
     cmp.setup({
+      performance = {
+        max_view_entries = 50,
+      },
       snippet = {
         expand = function(args)
           require("luasnip").lsp_expand(args.body)
@@ -137,7 +153,7 @@ return {
         ["<C-p>"] = cmp.mapping.select_prev_item(),
       }),
       sources = {
-        { name = "local_llm" },
+        { name = "local_llm", keyword_length = 0 },
         { name = "nvim_lsp" },
         { name = "luasnip" },
         { name = "buffer" },
