@@ -10,259 +10,192 @@ return {
     "saadparwaiz1/cmp_luasnip",
   },
   config = function()
-    local cmp = require("cmp")
-    local Job = require("plenary.job")
+    local cmp_ok, cmp = pcall(require, "cmp")
+    if not cmp_ok then
+      vim.notify("nvim-cmp not available", vim.log.levels.WARN)
+      return
+    end
 
-    -- Config
-    local opts = {
-      ollama_cmd = "ollama",
-      model = "qwen2.5-coder:1.5b",
-      context_lines = 6,
-      cache_size = 200,
-    }
+    local luasnip_ok, luasnip = pcall(require, "luasnip")
+    if not luasnip_ok then luasnip = nil end
 
-    -- Simple cache
-    local cache = { map = {}, order = {} }
-    local function cache_set(k, v)
-      if not cache.map[k] then
-        table.insert(cache.order, 1, k)
-        if #cache.order > opts.cache_size then
-          local rem = table.remove(cache.order)
-          cache.map[rem] = nil
+    -- Ollama configuration (override via globals before require)
+    local endpoint    = vim.g.ollama_endpoint or "http://localhost:11434"
+    local model       = vim.g.ollama_model or "qwen2.5-coder:1.5b"
+    local max_tokens  = vim.g.ollama_max_tokens or 256
+    local temperature = vim.g.ollama_temperature or 0.1
+    local ctx_lines   = vim.g.ollama_context_lines or 40
+
+    local function decode_json_safe(s)
+      if not s or s == "" then return nil end
+      local ok, decoded = pcall(vim.fn.json_decode, s)
+      if ok and decoded then return decoded end
+      return nil
+    end
+
+    local function extract_text_from_ollama_resp(body)
+      local dec = decode_json_safe(body)
+      if not dec then return vim.trim(body) end
+
+      if type(dec) == "table" then
+        if dec.content and type(dec.content) == "string" then return vim.trim(dec.content) end
+        if dec.result and type(dec.result) == "table" and #dec.result > 0 then
+          local first = dec.result[1]
+          if first and type(first.content) == "string" then return vim.trim(first.content) end
         end
-      end
-      cache.map[k] = v
-    end
-    local function cache_get(k) return cache.map[k] end
-
-    -- Build prompt
-    local function build_prompt(ctx, prefix)
-      return table.concat({
-        "System: Return ONLY code completion. No explanations.",
-        "",
-        "Context:",
-        ctx ~= "" and ctx or "(empty)",
-        "",
-        "Prefix: " .. prefix,
-        "",
-        "Return only the code continuation:",
-      }, "\n")
-    end
-
-    -- Call Ollama
-    local function call_ollama(prompt, cb)
-      local out = {}
-      Job:new({
-        command = opts.ollama_cmd,
-        args = { "generate", opts.model, prompt, "--format", "json" },
-        on_stdout = function(_, line) table.insert(out, line) end,
-        on_exit = function(j, return_val)
-          if return_val ~= 0 then
-            print("CURL ERROR: Exit code " .. return_val)
-            cb(nil)
-            return
-          end
-
-          -- Use empty string separator to avoid breaking JSON syntax with newlines
-          local resp = table.concat(j:result(), "")
-
-          if resp == "" then
-            print("API ERROR: Empty response from Ollama")
-            cb(nil)
-            return
-          end
-
-          local ok, dec = pcall(vim.fn.json_decode, resp)
-
-          if ok and dec then
-            local text = dec.response or ""
-
-            -- 1. Strip Markdown code blocks (e.g., ```zig ... ```)
-            text = text:gsub("```[%w]*\n?", ""):gsub("```", "")
-
-            -- 2. Strip leading/trailing whitespace
-            text = vim.trim(text)
-
-            -- 3. Strip the prefix if the LLM repeated it in the response
-            -- We extract the prefix from the original prompt 'p'
-            local prompt_prefix = p:match("Prefix:%s*([^\n]+)") or ""
-            local clean_prompt_prefix = vim.trim(prompt_prefix)
-
-            if text:sub(1, #clean_prompt_prefix) == clean_prompt_prefix then
-              text = text:sub(#clean_prompt_prefix + 1)
-            end
-
-            -- Final trim to ensure we aren't inserting leading spaces into existing code
-            text = vim.trim(text)
-
-            -- 4. Send the cleaned completion back to the callback
-            cb(text)
-          else
-            print("JSON DECODE ERROR: " .. resp)
-            cb(nil)
-          end
-        end,
-      }):start()
-    end
-
-    -- Create custom source
-    local llm_source = {}
-    llm_source.new = function()
-      return setmetatable({}, { __index = llm_source })
-    end
-
-    function llm_source:is_available() return true end
-    function llm_source:get_debug_name() return "local_llm" end
-
-    function llm_source:complete(request, callback)
-      print("LLM COMPLETE CALLED.")
-      local ctx = request.context
-      local bufnr = ctx.bufnr
-      local row = ctx.cursor.row
-      local col = ctx.cursor.col
-
-      print(string.format("bufnr=%s, row=%s, col=%s", bufnr, row, col))
-
-      local start_line = math.max(0, row - opts.context_lines - 1)
-      local recent_lines = vim.api.nvim_buf_get_lines(bufnr, start_line, row - 1, false)
-      local recent = table.concat(recent_lines, "\n")
-      local line = vim.api.nvim_buf_get_lines(bufnr, row - 1, row, false)[1] or ""
-      local prefix = line:sub(1, col - 1)
-
-      print(string.format("prefix='%s'", prefix))
-
-      if prefix == "" then
-        return callback({ items = {}, isIncomplete = false })
+        if dec.text and type(dec.text) == "string" then return vim.trim(dec.text) end
+        if dec.message and dec.message.content then return vim.trim(dec.message.content) end
       end
 
-      local cached = cache_get(prefix)
-      if cached then
-        print("CACHE HIT: " .. cached)
-        return callback({
-          items = {{ label = cached, insertText = cached }},
-          isIncomplete = false
-        })
+      return vim.trim(vim.fn.json_encode(dec))
+    end
+
+    local function build_prompt(context_text, ft)
+      local preamble = string.format(
+        "You are a code-completion assistant. Filetype: %s\n\nContext:\n%s\n\nRespond with the most likely continuation/completion. Return only code (no explanation).",
+        ft or "unknown",
+        context_text
+      )
+      return preamble
+    end
+
+    local function ask_ollama(prompt)
+      local payload = {
+        model = model,
+        prompt = prompt,
+        max_tokens = max_tokens,
+        temperature = temperature,
+        stream = false,
+      }
+
+      local payload_json = vim.fn.json_encode(payload)
+
+      local cmd = {
+        "curl", "-sS", "-X", "POST",
+        endpoint .. "/api/generate",
+        "-H", "Content-Type: application/json",
+        "-d", payload_json,
+      }
+
+      local ok, res = pcall(vim.fn.system, cmd)
+      if not ok then
+        return nil, "curl failed"
+      end
+      if vim.v.shell_error ~= 0 then
+        return nil, res
       end
 
-      print("CACHE MISS - CALLING OLLAMA")
-      local prompt = build_prompt(recent, prefix)
-      print("PROMPT: " .. prompt)
+      local text = extract_text_from_ollama_resp(res)
+      return text, nil
+    end
 
-      local function perform_call(p, cb)
-        local body = vim.fn.json_encode({
-          model = opts.model,
-          prompt = p,
-          stream = false,
-          options = { num_predict = 64, temperature = 0.2 }
-        })
+    -- --- Ollama cmp source -------------------------------------------------
+    local source = {}
+    source.new = function() return setmetatable({}, { __index = source }) end
+    source.is_available = function() return true end
+    source.get_debug_name = function() return "ollama" end
+    source.get_keyword_pattern = function() return [[\k\+]] end
 
-        Job:new({
-          command = "curl",
-          args = { "-s", "-X", "POST", "http://localhost:11434/api/generate",
-                   "-H", "Content-Type: application/json", "-d", body },
-          on_exit = function(j, return_val)
-            if return_val ~= 0 then return cb(nil) end
+    source.complete = function(self, params, callback)
+      -- Assemble context: lines around cursor
+      local bufnr = vim.api.nvim_get_current_buf()
+      local row = params.context.cursor.row - 1
+      local total = vim.api.nvim_buf_line_count(bufnr)
+      local start_line = math.max(0, row - ctx_lines)
+      local end_line = math.min(total - 1, row + ctx_lines)
 
-            -- Use empty string separator to avoid breaking JSON syntax
-            local resp = table.concat(j:result(), "")
-            local ok, dec = pcall(vim.fn.json_decode, resp)
+      local lines = vim.api.nvim_buf_get_lines(bufnr, start_line, end_line + 1, false)
+      local context_text = table.concat(lines, "\n")
+      local prompt = build_prompt(context_text, vim.bo.filetype)
 
-            if ok and dec then
-              local text = dec.response or ""
-              -- 1. Strip Markdown blocks
-              text = text:gsub("```[%w]*\n?", ""):gsub("```", "")
-              -- 2. Strip leading/trailing whitespace
-              text = vim.trim(text)
-
-              local prompt_prefix = p:match("Prefix:%s*([^\n]+)") or ""
-              local clean_prompt_prefix = vim.trim(prompt_prefix)
-              local clean_text = vim.trim(text)
-
-              -- We check both the full prefix and just the current word
-              if clean_text:sub(1, #clean_prompt_prefix) == clean_prompt_prefix then
-                  text = clean_text:sub(#clean_prompt_prefix + 1)
-              elseif clean_text:sub(1, #current_word) == current_word then
-                  text = clean_text:sub(#current_word + 1)
-              else
-                  text = clean_text
-              end
-
-              cb(text)
-            else
-              cb(nil)
-            end
-          end,
-        }):start()
-      end
-
-      perform_call(prompt, function(completion)
-        if not completion or completion == "" then
-          return callback({ items = {}, isIncomplete = false })
-        end
-
-        cache_set(prefix, completion)
-
+      -- Synchronous call (simple, blocks briefly)
+      local text, err = ask_ollama(prompt)
+      if not text then
         vim.schedule(function()
-          callback({
-            items = {{
-              label = prefix .. completion, -- Shows the full line in the menu
-              fileterText = prefix,
-              insertText = completion,      -- Only inserts the new part
-              detail = "Ollama (" .. opts.model .. ")",
-              kind = 1, -- Text icon
-            }},
-            isIncomplete = false
-          })
+          vim.notify("[ollama] request failed: " .. tostring(err), vim.log.levels.DEBUG)
         end)
-      end)
+        callback({})
+        return
+      end
 
-      -- Return true to tell cmp we are working asynchronously
-      return { isIncomplete = true }
+      local item = {
+        label = (text:gsub("\n", " ")):sub(1, 80),
+        kind = cmp.lsp.CompletionItemKind.Snippet or 15,
+        documentation = {
+          kind = "markdown",
+          value = "```text\n" .. text .. "\n```",
+        },
+        insertText = text,
+      }
 
+      callback({ item })
     end
 
-    -- Register source
-    cmp.register_source("local_llm", llm_source.new())
+    source.resolve = function(self, item, callback) callback(item) end
+    source.execute = function(self, item, callback) callback(item) end
 
-    -- Setup cmp
+    pcall(function() cmp.register_source("ollama", source.new()) end)
+
+    -- --- cmp setup ---------------------------------------------------------
+    local mapping = cmp.mapping.preset.insert({
+      ["<CR>"] = cmp.mapping.confirm({ select = true }),
+      ["<Tab>"] = cmp.mapping(function(fallback)
+        if cmp.visible() then cmp.select_next_item() elseif luasnip and luasnip.expand_or_jumpable() then luasnip.expand_or_jump() else fallback() end
+      end, { "i", "s" }),
+      ["<S-Tab>"] = cmp.mapping(function(fallback)
+        if cmp.visible() then cmp.select_prev_item() elseif luasnip and luasnip.jumpable(-1) then luasnip.jump(-1) else fallback() end
+      end, { "i", "s" }),
+    })
+
     cmp.setup({
-      performance = {
-        max_view_entries = 50,
-      },
       snippet = {
         expand = function(args)
-          require("luasnip").lsp_expand(args.body)
+          if luasnip then luasnip.lsp_expand(args.body) end
         end,
       },
-      experimental = {
-        ghost_text = true,
-      },
-      mapping = cmp.mapping.preset.insert({
-        ["<CR>"] = cmp.mapping.confirm({ select = true }),
-        ["<C-n>"] = cmp.mapping.select_next_item(),
-        ["<C-p>"] = cmp.mapping.select_prev_item(),
-      }),
-      sources = {
-        { name = "local_llm", keyword_length = 1 },
+      mapping = mapping,
+      sources = cmp.config.sources({
         { name = "nvim_lsp" },
         { name = "luasnip" },
         { name = "buffer" },
         { name = "path" },
-      },
-      formatting = {
-        format = function(entry, vim_item)
-          vim_item.menu = ({
-            local_llm = "[AI]",
-            nvim_lsp = "[LSP]",
-            luasnip = "[Snip]",
-            buffer = "[Buf]",
-            path = "[Path]",
-          })[entry.source.name]
-          return vim_item
-        end,
-      },
+        -- Ollama source is included so AI suggestions appear alongside other sources.
+        { name = "ollama" },
+      }),
     })
-  end
+
+    -- Buffer/local setups for cmdline (optional)
+    cmp.setup.cmdline("/", {
+      mapping = cmp.mapping.preset.cmdline(),
+      sources = { { name = "buffer" } },
+    })
+    cmp.setup.cmdline(":", {
+      mapping = cmp.mapping.preset.cmdline(),
+      sources = cmp.config.sources({ { name = "path" } }, { { name = "cmdline" } }),
+    })
+
+    -- Convenience keymap: explicit Ollama-only completion (insert mode)
+    vim.keymap.set("i", "<C-Space>", function()
+      cmp.complete({ config = { sources = { { name = "ollama" } } } })
+    end, { noremap = true, silent = true, desc = "Ollama completion" })
+
+    -- Optional: a normal-mode insertion helper
+    vim.keymap.set("n", "<leader>ai", function()
+      local bufnr = vim.api.nvim_get_current_buf()
+      local row = vim.api.nvim_win_get_cursor(0)[1]
+      local start_line = math.max(0, row - ctx_lines)
+      local end_line = math.min(vim.api.nvim_buf_line_count(bufnr) - 1, row + ctx_lines)
+      local lines = vim.api.nvim_buf_get_lines(bufnr, start_line, end_line + 1, false)
+      local prompt = build_prompt(table.concat(lines, "\n"), vim.bo.filetype)
+      local text, err = ask_ollama(prompt)
+      if not text then
+        vim.notify("[ollama] error: " .. tostring(err), vim.log.levels.ERROR)
+        return
+      end
+      -- Insert at cursor
+      vim.api.nvim_put(vim.split(text, "\n", { trimempty = false }), "c", true, true)
+    end, { desc = "Insert Ollama completion" })
+  end,
 }
 
 -- return {
