@@ -52,6 +52,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "East", "West" },
   { "NORTH", "SOUTH" },
   { "EAST", "WEST" },
+  { "pushed", "raised" },
 }
 
 local ft_defaults = {
