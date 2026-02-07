@@ -1,14 +1,13 @@
-local function is_ollama_running()
+local ollama_is_running = false
+
+vim.defer_fn(function()
   local handle = io.popen("curl -s -m 1 http://localhost:11434/api/tags 2>&1")
-  if not handle then return false end
-
-  local result = handle:read("*a")
-  handle:close()
-
-  return result:match("models") ~= nil
-end
-
-local ollama_is_running = is_ollama_running()
+  if not handle then
+    local result = handle:read("*a")
+    handle:close()
+    ollama_is_running = result:match("models") ~= nil
+  end
+end, 100)
 
 return {
   {
