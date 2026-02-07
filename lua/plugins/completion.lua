@@ -1,7 +1,17 @@
+local function is_ollama_running()
+  local handle = io.popen("curl -s http://localhost:11434/api/tags 2>&1")
+  local result = handle:read("*a")
+  handle:close()
+  return result:match("models") ~= nil
+end
+
+local ollama_is_running = is_ollama_running()
+
 return {
   {
     "milanglacier/minuet-ai.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
+    enabled = ollama_is_running,
     opts = {
       provider = "openai_fim_compatible",
       provider_options = {
@@ -93,9 +103,8 @@ return {
     version = "*",
     opts = {
       keymap = {
-        preset = "default",
+        -- preset = "default",
         ["<CR>"]  = { "accept", "fallback" },
-        -- ["<C-@>"] = { "accept", "fallback" }, -- Ctrl+Space since n->accept is common.
         ["<C-g>"] = { function(cmp)
           cmp.show({ providers = { "minuet" } })
         end },
@@ -113,12 +122,8 @@ return {
       },
 
       sources = {
-        default = {
-          "lsp",
-          "buffer",
-          "path",
-          "minuet",
-        },
+        default = ((ollama_is_running and { "lsp", "buffer", "path", "minuet" })
+                                       or { "lsp", "buffer", "path" }),
         providers = {
           minuet = {
             name = "minuet",
