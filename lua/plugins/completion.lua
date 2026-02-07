@@ -1,19 +1,9 @@
-local ollama_is_running = false
-
-vim.defer_fn(function()
-  local handle = io.popen("curl -s -m 1 http://localhost:11434/api/tags 2>&1")
-  if not handle then
-    local result = handle:read("*a")
-    handle:close()
-    ollama_is_running = result:match("models") ~= nil
-  end
-end, 100)
-
 return {
   {
     "milanglacier/minuet-ai.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
-    enabled = ollama_is_running,
+    enabled = false,
+    lazy = true,
     opts = {
       provider = "openai_fim_compatible",
       provider_options = {
@@ -100,42 +90,59 @@ return {
     "saghen/blink.cmp",
     dependencies = {
       "neovim/nvim-lspconfig",
-      "milanglacier/minuet-ai.nvim",
     },
     version = "*",
-    opts = {
-      keymap = {
-        -- preset = "default",
-        ["<CR>"]  = { "accept", "fallback" },
-        ["<C-g>"] = { function(cmp)
-          cmp.show({ providers = { "minuet" } })
-        end },
-      },
-
-      appearance = {
-        use_nvim_cmp_as_default = true,
-        nerd_font_variant = 'mono',
-      },
-
-      completion = {
-        ghost_text = {
-          enabled = true,
+    config = function()
+      require('blink.cmp').setup({
+        keymap = {
+          -- preset = "default",
+          ["<CR>"]  = { "accept", "fallback" },
+          ["<C-g>"] = { function(cmp)
+            cmp.show({ providers = { "minuet" } })
+          end },
         },
-      },
 
-      sources = {
-        default = ((ollama_is_running and { "lsp", "buffer", "path", "minuet" })
-                                       or { "lsp", "buffer", "path" }),
-        providers = {
-          minuet = {
-            name = "minuet",
-            module = "minuet.blink",
-            score_offset = 100,
-            async = true,
+        appearance = {
+          use_nvim_cmp_as_default = true,
+          nerd_font_variant = 'mono',
+        },
+
+        completion = {
+          ghost_text = {
+            enabled = true,
           },
         },
-      },
-    },
+
+        sources = {
+          default = { "lsp", "buffer", "path" },
+          providers = {
+            minuet = {
+              name = "minuet",
+              module = "minuet.blink",
+              score_offset = 100,
+              async = true,
+            },
+          },
+        },
+      })
+
+      vim.defer_fn(function()
+        local handle = io.popen("curl -s -m 1 http://localhost:11434/api/tags 2>&1")
+        if handle then
+          local result = handle:read("*a")
+          handle:close()
+
+          if result:match("models") then
+            -- Ollama is running! Enable minuet
+            require('lazy').load({ plugins = { "minuet-ai.nvim" } })
+
+            -- Update blink sources to include minuet
+            local blink = require('blink.cmp')
+            blink.config.sources.default = { "lsp", "buffer", "path", "minuet" }
+          end
+        end
+      end, 100)
+    end,
   },
 }
 
