@@ -25,6 +25,7 @@ M.replacements = {
   ["volumne"] = "volume",
   ["Visibale"] = "Visible",
   ["intialized"] = "initialized",
+  ["defualt"] = "default",
 }
 
 M.filetype_replacements = {

@@ -94,7 +94,8 @@ return {
     opts = {
       keymap = {
         preset = "default",
-        ["<CR>"] = { "accept", "fallback" },
+        ["<CR>"]  = { "accept", "fallback" },
+        -- ["<C-@>"] = { "accept", "fallback" }, -- Ctrl+Space since n->accept is common.
         ["<C-g>"] = { function(cmp)
           cmp.show({ providers = { "minuet" } })
         end },
