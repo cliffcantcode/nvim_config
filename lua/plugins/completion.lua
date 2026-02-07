@@ -1,7 +1,10 @@
 local function is_ollama_running()
-  local handle = io.popen("curl -s http://localhost:11434/api/tags 2>&1")
+  local handle = io.popen("curl -s -m 1 http://localhost:11434/api/tags 2>&1")
+  if not handle then return false end
+
   local result = handle:read("*a")
   handle:close()
+
   return result:match("models") ~= nil
 end
 
