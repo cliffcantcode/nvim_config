@@ -52,7 +52,8 @@ require 'formatter'
 require 'dimensions'
 
 -- [[ Show distant paired brackets inline. ]]
-require 'echo_brackets'
+-- TODO: See if we can make this not slow us down so much.
+-- require 'echo_brackets'
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et

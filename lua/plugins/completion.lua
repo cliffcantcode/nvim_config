@@ -93,6 +93,7 @@ return {
     dependencies = {
       "neovim/nvim-lspconfig",
     },
+    event = 'InsertEnter',
     version = "*",
     config = function()
       require('blink.cmp').setup({

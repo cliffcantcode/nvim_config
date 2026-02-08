@@ -1,3 +1,4 @@
+-- TODO: Could we optimize this to just autocorrect a diff after the first autocorrect? It's running every save over the whole thing and being unoptimized could prevent scaling.
 local M = {}
 
 ---------------------------------------------------------------------------
