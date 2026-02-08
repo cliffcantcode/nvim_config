@@ -95,8 +95,9 @@ return {
     config = function()
       require('blink.cmp').setup({
         keymap = {
-          -- preset = "default",
+          preset = "default",
           ["<CR>"]  = { "accept", "fallback" },
+          ["<Tab>"]  = { "accept", "fallback" },
           ["<C-g>"] = { function(cmp)
             cmp.show({ providers = { "minuet" } })
           end },
