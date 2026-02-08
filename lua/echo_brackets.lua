@@ -14,7 +14,7 @@ vim.api.nvim_create_autocmd("CursorHold", {
 
     local ok_parser, parser = pcall(ts.get_parser, 0)
     if not ok_parser or not parser then
-      return 
+      return
     end
 
     local cursor = vim.api.nvim_win_get_cursor(0)

@@ -67,6 +67,11 @@ return {
               "target/",
               "dist/",
               "build/",
+              "&.dll$",
+              "&.exe$",
+              "&.so$",
+              "&.a$",
+              "&.dylib$",
           },
           mappings = {
             i = {

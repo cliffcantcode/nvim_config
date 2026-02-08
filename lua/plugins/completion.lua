@@ -1,3 +1,5 @@
+local ollama_checked = false
+
 return {
   {
     "milanglacier/minuet-ai.nvim",
@@ -128,21 +130,24 @@ return {
       })
 
       vim.defer_fn(function()
-        local handle = io.popen("curl -s -m 1 http://localhost:11434/api/tags 2>&1")
-        if handle then
-          local result = handle:read("*a")
-          handle:close()
+        if ollama_checked then return end
+        ollama_checked = true
 
-          if result:match("models") then
-            -- Ollama is running! Enable minuet
-            require('lazy').load({ plugins = { "minuet-ai.nvim" } })
-
-            -- Update blink sources to include minuet
-            local blink = require('blink.cmp')
-            blink.config.sources.default = { "lsp", "buffer", "path", "minuet" }
+        -- Better: use vim.system (non-blocking in Neovim 0.10+)
+        vim.system(
+          { 'curl', '-s', '-m', '1', 'http://localhost:11434/api/tags' },
+          { text = true },
+          function(result)
+            if result.code == 0 and result.stdout:match("models") then
+              vim.schedule(function()
+                require('lazy').load({ plugins = { "minuet-ai.nvim" } })
+                local blink = require('blink.cmp')
+                blink.config.sources.default = { "lsp", "buffer", "path", "minuet" }
+              end)
+            end
           end
-        end
-      end, 100)
+        )
+      end, 500)
     end,
   },
 }
