@@ -54,11 +54,10 @@ require 'formatter'
 require 'dimensions'
 
 -- [[ Show distant paired brackets inline. ]]
--- TODO: See if we can make this not slow us down so much.
 require 'echo_brackets'
 
 -- [[ Helper for runtime profiling (:StartProfile/:StopProfile)]]
-require 'profile_runtime'
+require 'profile'
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
