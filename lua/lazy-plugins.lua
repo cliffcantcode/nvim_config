@@ -8,7 +8,6 @@ require('lazy').setup({
   change_detection = {
       notify = false,
     },
-
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
     -- default lazy.nvim defined Nerd Font icons, otherwise define a unicode icons table
@@ -26,6 +25,22 @@ require('lazy').setup({
       start = '🚀',
       task = '📌',
       lazy = '💤 ',
+    },
+  },
+  performance = {
+    rtp = {
+      disabled_plugins = {
+        "gzip",
+        "tarPlugin",
+        "tohtml",
+        "tutor",
+        "zipPlugin",
+        -- Because we have oil as the explorer.
+        "netrwPlugin",
+        "netrw",
+        "netrwSettings",
+        "netrwFileHandlers",
+      },
     },
   },
 })

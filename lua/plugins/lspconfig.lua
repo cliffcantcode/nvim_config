@@ -3,7 +3,11 @@ return {
   "neovim/nvim-lspconfig",
   event = 'BufReadPre',
   config = function()
-    local capabilities = require("blink.cmp").get_lsp_capabilities()
+    local capabilities = vim.lsp.protocol.make_client_capabilities()
+    capabilities.textDocument.completion.completionItem.snippetSupport = true
+    capabilities.textDocument.completion.completionItem.resolveSupport = {
+      properties = { "documentation", "detail", "additionalTextEdits" },
+    }
 
     vim.lsp.config("zls", {
       capabilities = capabilities,
@@ -53,11 +57,11 @@ return {
         end
 
         map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
-        map('<leader>gd', require('telescope.builtin').lsp_definitions,      '[G]oto [D]efinition')
-        map('<leader>gr', require('telescope.builtin').lsp_references,       '[G]oto [R]eferences')
-        map('<leader>gt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
-        map('<leader>gi', require('telescope.builtin').lsp_implementations,  '[G]oto [I]mplementations')
-        map("<leader>ds", require('telescope.builtin').lsp_document_symbols, '[d]ocument [s]ymbols')
+        map('<leader>gd', function() require('telescope.builtin').lsp_definitions() end,      '[G]oto [D]efinition')
+        map('<leader>gr', function() require('telescope.builtin').lsp_references() end,       '[G]oto [R]eferences')
+        map('<leader>gt', function() require('telescope.builtin').lsp_type_definitions() end, '[G]oto [T]ype Definition')
+        map('<leader>gi', function() require('telescope.builtin').lsp_implementations() end,  '[G]oto [I]mplementations')
+        map("<leader>ds", function() require('telescope.builtin').lsp_document_symbols() end, '[d]ocument [s]ymbols')
         map("<leader>th", function()
           local ih = vim.lsp.inlay_hint
           if not ih then return end

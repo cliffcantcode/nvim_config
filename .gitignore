@@ -2,16 +2,11 @@
 # Neovim runtime junk
 # -------------------------
 
-# Swap files
 *.swp
 *.swo
 *.swx
-
-# Backup files
 *~
 *.bak
-
-# Undo history
 *.un~
 undo/
 undodir/
@@ -20,7 +15,6 @@ undodir/
 # Plugin managers & plugins
 # -------------------------
 
-# lazy.nvim
 lazy-lock.json
 state.json
 
@@ -28,7 +22,6 @@ state.json
 # Neovim logs & profiling
 # -------------------------
 
-# General logs
 logs/
 log/
 *.log
@@ -37,7 +30,6 @@ log/
 # OS / editor noise
 # -------------------------
 
-# macOS
 .DS_Store
 
 # -------------------------

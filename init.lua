@@ -5,6 +5,8 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
+if vim.loader then vim.loader.enable() end
+
 -- Disable tree-sitter completely for Swift files
 -- Needs to be loaded before plugins.
 vim.api.nvim_create_autocmd({ "BufReadPre", "FileType" }, {
