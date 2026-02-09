@@ -1,0 +1,10 @@
+Neovim :profile summary (slowest scripts first)
+Source: C:\Users\cgr537\AppData\Local\nvim/logs/profiling/runtime.log
+
+Count  Total(s)   Self(s)    Script
+--------------------------------------------------------------------------------
+     1      0.022      0.021 C:\Users\cgr537\AppData\Local\Programs\nvim\share\nvim\runtime\ftplugin\lua.lua
+     8      0.001      0.001 C:\Users\cgr537\AppData\Local\nvim-data\lazy\oil.nvim\syntax\oil.vim
+     1      0.000      0.000 C:\Users\cgr537\AppData\Local\Programs\nvim\share\nvim\runtime\ftplugin\lua.vim
+     1      0.000      0.000 C:\Users\cgr537\AppData\Local\Programs\nvim\share\nvim\runtime\indent\lua.vim
+     1      0.000      0.000 C:\Users\cgr537\AppData\Local\nvim-data\lazy\nvim-treesitter\autoload\nvim_treesitter.vim

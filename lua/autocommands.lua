@@ -92,7 +92,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     -- 2) Put a newline at the end of the file.
     local name = vim.api.nvim_buf_get_name(bufnr)
     local ext = vim.fn.fnamemodify(name, ":e")
-    local files_that_want_newline = {zig = true, c = true, cpp = true, lua = true, md = true, txt = true, json = true, toml = true, vim = true, py = true}
+    local files_that_want_newline = {zig = true, c = true, cpp = true, lua = true, txt = true, json = true, toml = true, vim = true, py = true}
 
     if files_that_want_newline[ext] then
       local line_count = vim.api.nvim_buf_line_count(bufnr)
