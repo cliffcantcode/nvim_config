@@ -1,107 +1,167 @@
-local ns = vim.api.nvim_create_namespace("BracketEcho")
-local aug = vim.api.nvim_create_augroup("BracketEcho", { clear = true })
+local api = vim.api
+local fn = vim.fn
+local ts = vim.treesitter
+if not ts then return end
 
-local last = {
-  bufnr = -1,
-  row = -1,
-  col = -1,
-  tick = -1,
-}
+local ns  = api.nvim_create_namespace("BracketEcho")
+local aug = api.nvim_create_augroup("BracketEcho", { clear = true })
 
-local function clear(bufnr)
-  vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+-- Tunables (override via vim.g.*)
+local MAX_LINES    = vim.g.bracketecho_max_lines or 5000
+local MIN_DISTANCE = vim.g.bracketecho_min_distance or 15
+local MAX_DISPLAY  = vim.g.bracketecho_max_display or 160
+
+-- If you really want this to work even when there isn't an existing TS tree,
+-- set this to 1 (may reintroduce occasional parse pauses).
+local FORCE_PARSE  = vim.g.bracketecho_force_parse == 1
+
+-- Hot-path state (no table allocations)
+local last_buf, last_win, last_row, last_tick, last_tok = -1, -1, -1, -1, -1
+local mark_buf, mark_id = -1, nil
+
+-- Per-buffer TS cache
+local cache = {} -- bufnr -> { parser=..., tree=..., tick=... }
+
+local function del_mark(bufnr)
+  if mark_id and mark_buf == bufnr and api.nvim_buf_is_valid(bufnr) then
+    pcall(api.nvim_buf_del_extmark, bufnr, ns, mark_id)
+  end
+  if mark_buf == bufnr then
+    mark_buf, mark_id = -1, nil
+  end
 end
 
--- Clear stale text quickly when you move (so it never “lags behind”)
-vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "InsertEnter", "BufLeave" }, {
+-- Clear stale hint immediately on movement
+api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "InsertEnter", "BufLeave", "WinLeave" }, {
   group = aug,
   callback = function(args)
-    clear(args.buf)
+    del_mark(args.buf)
   end,
 })
 
-vim.api.nvim_create_autocmd("CursorHold", {
-  desc = "Show matching line using Treesitter (cached)",
+api.nvim_create_autocmd({ "BufUnload", "BufWipeout" }, {
   group = aug,
   callback = function(args)
+    cache[args.buf] = nil
+    del_mark(args.buf)
+  end,
+})
+
+-- Find the *last* closing token on the line (cursor can be anywhere)
+-- Returns 0-indexed column, or nil if none.
+local function find_last_closer_col(line)
+  -- scan from end for ) ] }
+  for i = #line, 1, -1 do
+    local b = line:byte(i)
+    if b == 41 or b == 93 or b == 125 then
+      return i - 1
+    end
+  end
+  -- fallback: last word-boundary `end`
+  local s = line:match(".*()%f[%w]end%f[%W]")
+  if s then return s - 1 end
+  return nil
+end
+
+local function get_tree(bufnr, tick)
+  local c = cache[bufnr]
+  local parser = c and c.parser
+  if not parser then
+    local ok
+    ok, parser = pcall(ts.get_parser, bufnr)
+    if not ok or not parser then return nil end
+    c = c or {}
+    c.parser = parser
+    cache[bufnr] = c
+  end
+
+  if c.tick == tick and c.tree then
+    return c.tree
+  end
+
+  -- FAST PATH: do NOT force a parse. Reuse existing TS tree if present.
+  local trees = parser:trees()
+  local tree = trees and trees[1] or nil
+  if not tree then
+    if not FORCE_PARSE then return nil end
+    local ok, parsed = pcall(function() return parser:parse() end)
+    if not ok or not parsed or not parsed[1] then return nil end
+    tree = parsed[1]
+  end
+
+  c.tree = tree
+  c.tick = tick
+  return tree
+end
+
+api.nvim_create_autocmd("CursorHold", {
+  group = aug,
+  desc = "Echo opener line for closers (fast cached TS, cursor can be anywhere on line)",
+  callback = function(args)
     local bufnr = args.buf
-
-    -- Hard skips for huge buffers (prevents TS parse spikes)
-    local line_count = vim.api.nvim_buf_line_count(bufnr)
-    if line_count > 5000 then return end
+    if vim.bo[bufnr].buftype ~= "" then return end
     if vim.b[bufnr].ts_disable then return end
+    if api.nvim_buf_line_count(bufnr) > MAX_LINES then return end
 
-    local cursor = vim.api.nvim_win_get_cursor(0)
-    local row = cursor[1] - 1
-    local col = cursor[2]
+    local win = api.nvim_get_current_win()
+    local row = api.nvim_win_get_cursor(win)[1] - 1
     local tick = vim.b[bufnr].changedtick
 
-    -- Cache: don’t redo work if nothing changed
-    if last.bufnr == bufnr and last.row == row and last.col == col and last.tick == tick then
+    local line = api.nvim_get_current_line()
+    if line == "" then return end
+
+    local tok = find_last_closer_col(line)
+    if not tok or tok < 0 or tok >= #line then return end
+
+    -- Cache: ignore cursor column entirely (works anywhere on the line)
+    if bufnr == last_buf and win == last_win and row == last_row and tick == last_tick and tok == last_tok then
       return
     end
-    last = { bufnr = bufnr, row = row, col = col, tick = tick }
+    last_buf, last_win, last_row, last_tick, last_tok = bufnr, win, row, tick, tok
 
-    clear(bufnr)
+    del_mark(bufnr)
 
-    local has_ts, ts = pcall(require, "vim.treesitter")
-    if not has_ts then return end
+    local tree = get_tree(bufnr, tick)
+    if not tree then return end
 
-    local ok_parser, parser = pcall(ts.get_parser, bufnr)
-    if not ok_parser or not parser then return end
+    local root = tree:root()
+    if not root then return end
 
-    local line_text = vim.api.nvim_get_current_line()
-    if line_text == "" then return end
+    local node = root:descendant_for_range(row, tok, row, tok + 1)
+    if not node then return end
 
-    -- Find last closing bracket on the line (your existing heuristic)
-    local start_idx
-    do
-      local i = 1
-      while true do
-        local s = line_text:find("[%]%)%}]", i)
-        if not s then break end
-        start_idx = s
-        i = s + 1
-      end
-    end
-
-    if not start_idx then
-      local i = 1
-      while true do
-        local s = line_text:find("%f[%w]end%f[%W]", i)
-        if not s then break end
-        start_idx = s
-        i = s + 1
-      end
-    end
-
-    if not start_idx then return end
-
-    local node_ok, node = pcall(vim.treesitter.get_node, { bufnr = bufnr, pos = { row, start_idx - 1 } })
-    if not node_ok or not node then return end
-
+    -- Walk up until we find a node that starts above this line.
     local target = node
-    local start_row = target:range()
-    while target and start_row == row do
+    local start_row = row
+    while target do
+      start_row = target:range() -- first return is start row
+      if start_row < row then break end
       target = target:parent()
-      if target then start_row = target:range() end
     end
+    if not target or start_row >= row then return end
 
-    if not target or start_row == row then return end
-    if (math.abs(start_row - row) <= 15) or (start_row == 0) then return end
+    local dist = row - start_row
+    if dist <= MIN_DISTANCE or start_row == 0 then return end
 
-    local match_line = vim.api.nvim_buf_get_lines(bufnr, start_row, start_row + 1, false)[1]
+    -- Only show if opener is offscreen above
+    local top = fn.line("w0") - 1
+    if start_row >= top then return end
+
+    local match_line = api.nvim_buf_get_lines(bufnr, start_row, start_row + 1, false)[1]
     if not match_line then return end
 
     local display = match_line:match("^%s*$") and "<blank line>" or match_line
     display = display:gsub("^%s+", "")
-    if #display > 160 then display = display:sub(1, 160) .. "..." end
+    if #display > MAX_DISPLAY then
+      display = display:sub(1, MAX_DISPLAY) .. "..."
+    end
 
-    vim.api.nvim_buf_set_extmark(bufnr, ns, row, 0, {
-      virt_text = { { string.format("#%d: %s", start_row + 1, display), "Comment" } },
+    mark_id = api.nvim_buf_set_extmark(bufnr, ns, row, 0, {
+      virt_text = { { "#" .. (start_row + 1) .. ": " .. display, "Comment" } },
       virt_text_pos = "eol",
       hl_mode = "combine",
     })
+    mark_buf = bufnr
   end,
 })
 
