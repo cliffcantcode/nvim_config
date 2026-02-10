@@ -181,7 +181,6 @@ local function run_tests()
     { "Y",             "Z",             f },
     { "localPoint.x",  "localPoint.y",  f },
     { "self.x_offset += dx;", "self.y_offset += dy;", f},
-    -- TODO: We need the dimensions to rotate if they are alone at the end of a line.
     { "= x",           "= y",           f },
     { "min(min_x, x)", "min(min_y, y)", f },
 

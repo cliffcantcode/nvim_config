@@ -163,7 +163,7 @@ end, { desc = "[l]int [d]irectory" })
 
 vim.api.nvim_create_autocmd("BufWritePost", {
   group = vim.api.nvim_create_augroup("AutoLinter", { clear = true }),
-  pattern = "*.zig, *.lua, *.python, *.c, *.cpp, *.rust, *.sh, *.bash",
+  pattern = { "*.zig", "*.lua", "*.python", "*.c", "*.cpp", "*.rust", "*.sh", "*.bash" },
   callback = function()
     M.lint_file()
   end,

@@ -2,8 +2,10 @@ return {
   {
     'stevearc/oil.nvim',
     cmd = "Oil",
+    lazy = false,
+    cmd = "Oil",
     keys = {
-      { "-", "<CMD>Oil<CR>", desc = "Open parent directory" },
+      { "-", "<CMD>Oil<CR>", desc = "Open file explorer." },
     },
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     opts = {

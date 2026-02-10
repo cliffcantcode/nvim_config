@@ -1,4 +1,3 @@
--- TODO: Could we optimize this to just autocorrect a diff after the first autocorrect? It's running every save over the whole thing and being unoptimized could prevent scaling.
 local M = {}
 
 ---------------------------------------------------------------------------
@@ -27,6 +26,7 @@ M.replacements = {
   ["Visibale"] = "Visible",
   ["intialized"] = "initialized",
   ["defualt"] = "default",
+  ["nvmi"] = "nvim",
 }
 
 M.filetype_replacements = {
@@ -111,20 +111,17 @@ end
 
 -- Apply replacements using nvim_buf_set_text
 local function autocorrect_buffer(bufnr, rules)
-  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
-  for lnum = 0, line_count - 1 do
-    local orig_line = vim.api.nvim_buf_get_lines(bufnr, lnum, lnum + 1, false)[1]
+  for i, orig_line in ipairs(lines) do
     if orig_line and orig_line ~= "" then
       local fixed = apply_rules_to_line(orig_line, rules)
-
       if fixed ~= orig_line then
-        vim.api.nvim_buf_set_text(
+        vim.api.nvim_buf_set_lines(
           bufnr,
-          lnum,
-          0,
-          lnum,
-          #orig_line,
+          i - 1,
+          i,
+          false,
           { fixed }
         )
       end
@@ -133,7 +130,6 @@ local function autocorrect_buffer(bufnr, rules)
 end
 
 -- Always-on tests (simple input → output)
-
 function M.run_tests()
   local tests = {
     {

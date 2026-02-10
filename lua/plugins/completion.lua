@@ -4,7 +4,7 @@ return {
   {
     "milanglacier/minuet-ai.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
-    enabled = false,
+    enabled = true,
     lazy = true,
     opts = {
       provider = "openai_fim_compatible",
