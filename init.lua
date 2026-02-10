@@ -5,6 +5,9 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
+-- Replace matchparen with a plugin (vim-matchup). It's causing severe lag on Windows.
+vim.g.loaded_matchparen = 1
+
 if vim.loader then vim.loader.enable() end
 
 -- Disable tree-sitter completely for Swift files
@@ -54,7 +57,8 @@ require 'formatter'
 require 'dimensions'
 
 -- [[ Show distant paired brackets inline. ]]
-require 'echo_brackets'
+-- TODO: Get this to be not so slow.
+-- require 'echo_brackets'
 
 -- [[ Helper for runtime profiling (:StartProfile/:StopProfile)]]
 require 'profile'
