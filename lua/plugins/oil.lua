@@ -1,3 +1,4 @@
+-- TODO: Set it to default open the explorer, right now it goes to a blank page after something like a plugin install.
 return {
   {
     'stevearc/oil.nvim',

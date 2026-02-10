@@ -79,5 +79,8 @@ vim.opt.fileencoding = "utf-8"
 -- Make jump list behave like a stack to prevent a build up of weird jumps.
 vim.opt.jumpoptions = "stack"
 
+-- Replace matchparen with a plugin (vim-matchup). It's causing severe lag on Windows.
+vim.g.loaded_matchparen = 1
+
 -- vim: ts=2 sts=2 sw=2 et
 
