@@ -1,3 +1,9 @@
+-- TODO: Getting error: Error executing vim.schedule lua callback: ...cliffordregister/.config/nvim/lua/plugins/comple
+-- tion.lua:146: attempt to index field 'config' (a nil value)
+-- stack traceback:
+--         ...cliffordregister/.config/nvim/lua/plugins/completion.lua:146: in function <...cliff
+-- ordregister/.config/nvim/lua/plugins/completion.lua:143>
+
 local ollama_checked = false
 
 return {
@@ -143,7 +149,9 @@ return {
               vim.schedule(function()
                 require('lazy').load({ plugins = { "minuet-ai.nvim" } })
                 local blink = require('blink.cmp')
-                blink.config.sources.default = { "lsp", "buffer", "path", "minuet" }
+                local current_config = blink.get_config()
+                current_config.config.sources.default = { "lsp", "buffer", "path", "minuet" }
+                blink.setup(current_config)
               end)
             end
           end
