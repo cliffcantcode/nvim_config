@@ -57,7 +57,6 @@ require 'formatter'
 require 'dimensions'
 
 -- [[ Show distant paired brackets inline. ]]
--- TODO: Get this to be not so slow.
 require 'echo_brackets'
 
 -- [[ Helper for runtime profiling (:StartProfile/:StopProfile)]]

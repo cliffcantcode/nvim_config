@@ -50,6 +50,12 @@ return {
             body = {
               keep_alive = "30m",
             },
+            schema = {
+              model = {
+                default = "qwen2.5-coder:14b",
+                choices = { "qwen2.5-coder:14b" }, -- Exclude other models.
+              },
+            },
             parameters = {
               sync = true,
             },

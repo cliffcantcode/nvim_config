@@ -1,9 +1,3 @@
--- TODO: Getting error: Error executing vim.schedule lua callback: ...cliffordregister/.config/nvim/lua/plugins/comple
--- tion.lua:146: attempt to index field 'config' (a nil value)
--- stack traceback:
---         ...cliffordregister/.config/nvim/lua/plugins/completion.lua:146: in function <...cliff
--- ordregister/.config/nvim/lua/plugins/completion.lua:143>
-
 local ollama_checked = false
 
 return {
@@ -102,29 +96,45 @@ return {
     event = 'InsertEnter',
     version = "*",
     config = function()
-      require('blink.cmp').setup({
+      local blink = require("blink.cmp")
+
+      -- toggled on when Ollama is detected (or when you manually trigger Minuet)
+      local minuet_enabled = false
+
+      blink.setup({
         keymap = {
           preset = "default",
-          ["<CR>"]  = { "accept", "fallback" },
-          ["<Tab>"]  = { "accept", "fallback" },
-          ["<C-g>"] = { function(cmp)
-            cmp.show({ providers = { "minuet" } })
-          end },
+          ["<CR>"] = { "accept", "fallback" },
+          ["<Tab>"] = { "accept", "fallback" },
+
+          -- manual AI completion: loads minuet on demand, enables source, then shows it
+          ["<C-g>"] = {
+            function(cmp)
+              require("lazy").load({ plugins = { "minuet-ai.nvim" } })
+              minuet_enabled = true
+              cmp.show({ providers = { "minuet" } })
+            end,
+          },
         },
 
         appearance = {
           use_nvim_cmp_as_default = true,
-          nerd_font_variant = 'mono',
+          nerd_font_variant = "mono",
         },
 
         completion = {
-          ghost_text = {
-            enabled = true,
-          },
+          ghost_text = { enabled = true },
         },
 
         sources = {
-          default = { "lsp", "buffer", "path" },
+          -- Blink supports a function here (dynamic providers list)
+          default = function()
+            if minuet_enabled then
+              return { "lsp", "buffer", "path", "minuet" }
+            end
+            return { "lsp", "buffer", "path" }
+          end,
+
           providers = {
             minuet = {
               name = "minuet",
@@ -140,18 +150,14 @@ return {
         if ollama_checked then return end
         ollama_checked = true
 
-        -- Better: use vim.system (non-blocking in Neovim 0.10+)
         vim.system(
-          { 'curl', '-s', '-m', '1', 'http://localhost:11434/api/tags' },
+          { "curl", "-s", "-m", "1", "http://localhost:11434/api/tags" },
           { text = true },
           function(result)
             if result.code == 0 and result.stdout:match("models") then
               vim.schedule(function()
-                require('lazy').load({ plugins = { "minuet-ai.nvim" } })
-                local blink = require('blink.cmp')
-                local current_config = blink.get_config()
-                current_config.config.sources.default = { "lsp", "buffer", "path", "minuet" }
-                blink.setup(current_config)
+                require("lazy").load({ plugins = { "minuet-ai.nvim" } })
+                minuet_enabled = true
               end)
             end
           end
