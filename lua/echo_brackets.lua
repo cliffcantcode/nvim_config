@@ -32,7 +32,7 @@ local function del_mark(bufnr)
 end
 
 -- Clear stale hint immediately on movement
-api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "InsertEnter", "BufLeave", "WinLeave" }, {
+api.nvim_create_autocmd({ "CursorMoved", "InsertEnter", "BufLeave", "WinLeave" }, {
   group = aug,
   callback = function(args)
     del_mark(args.buf)

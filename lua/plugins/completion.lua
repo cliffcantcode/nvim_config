@@ -124,6 +124,9 @@ return {
 
         completion = {
           ghost_text = { enabled = true },
+          trigger = {
+            prefetch_on_insert = true,
+          },
         },
 
         sources = {
