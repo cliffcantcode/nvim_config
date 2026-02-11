@@ -6,6 +6,7 @@ return {
     dependencies = { 'nvim-lua/plenary.nvim' },
     opts = {
       signs = false,
+
       -- Colors are based on catppuccin-mocha.
       keywords = {
         TODO = {
@@ -26,10 +27,34 @@ return {
           color = '#f9e2af', -- IMPORTANT: Yellow
         },
       },
+
+      -- Exclude noisy files/dirs from TodoTelescope/TodoQuickFix/etc.
+      search = {
+        command = "rg",
+        args = {
+          "--color=never",
+          "--no-heading",
+          "--with-filename",
+          "--line-number",
+          "--column",
+
+          -- Exclude THIS config file anywhere it appears:
+          "--glob=!**/lua/plugins/todo-comments.lua",
+
+          "--glob=!**/lua/autocorrect.lua",
+
+          -- Optional: exclude lockfiles, build dirs, etc:
+          "--glob=!**/lazy-lock.json",
+          "--glob=!**/zig-cache/**",
+          "--glob=!**/zig-out/**",
+        },
+      },
     },
+
+    -- Better lazy.nvim style (lets lazy manage keys cleanly)
     keys = {
-      vim.keymap.set("n", "<leader>st", "<cmd>TodoTelescope<cr>", { desc = "[S]earch [T]odos" }),
-      vim.keymap.set("n", "<leader>sT", "<cmd>TodoQuickFix<cr>",  { desc = "[S]end [T]odos to quickfix" }),
+      { "<leader>st", "<cmd>TodoTelescope<cr>", desc = "[S]earch [T]odos" },
+      { "<leader>sT", "<cmd>TodoQuickFix<cr>",  desc = "[S]end [T]odos to quickfix" },
     },
   },
 }
