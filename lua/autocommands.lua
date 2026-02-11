@@ -108,3 +108,24 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   end,
 })
 
+-- Give UI a moment, then load core file plugins in the background.
+vim.api.nvim_create_autocmd("VimEnter", {
+  group = vim.api.nvim_create_augroup("WarmupLazyPlugins", { clear = true }),
+  once = true,
+  callback = function()
+    vim.defer_fn(function()
+      local ok, lazy = pcall(require, "lazy")
+      if not ok then return end
+
+      lazy.load({
+        plugins = {
+          "nvim-treesitter",
+          "nvim-lspconfig",
+          "gitsigns.nvim",
+          "indent-blankline.nvim",
+        },
+      })
+    end, 20)
+  end,
+})
+

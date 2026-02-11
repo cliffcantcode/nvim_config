@@ -11,6 +11,10 @@ local MAX_LINES    = vim.g.bracketecho_max_lines or 5000
 local MIN_DISTANCE = vim.g.bracketecho_min_distance or 15
 local MAX_DISPLAY  = vim.g.bracketecho_max_display or 160
 
+local uv = vim.uv or vim.loop
+local last_hold_ms = 0
+local HOLD_THROTTLE_MS = vim.g.bracketecho_throttle_ms or 800
+
 -- If you really want this to work even when there isn't an existing TS tree,
 -- set this to 1 (may reintroduce occasional parse pauses).
 local FORCE_PARSE  = vim.g.bracketecho_force_parse == 1
@@ -99,6 +103,11 @@ api.nvim_create_autocmd("CursorHold", {
   desc = "Echo opener line for closers (fast cached TS, cursor can be anywhere on line)",
   callback = function(args)
     local bufnr = args.buf
+
+    local now = uv and uv.now and uv.now() or 0
+    if now ~= 0 and (now - last_hold_ms) < HOLD_THROTTLE_MS then return end
+    last_hold_ms = now
+
     if vim.bo[bufnr].buftype ~= "" then return end
     if vim.b[bufnr].ts_disable then return end
     if api.nvim_buf_line_count(bufnr) > MAX_LINES then return end

@@ -13,14 +13,5 @@ return {
     vim.g.matchup_matchparen_insert_timeout = 30  -- Even faster timeout in insert mode
     vim.g.matchup_matchparen_offscreen = {}  -- Disable offscreen matching (slow feature)
   end,
-  config = function()
-    -- Enable treesitter integration for faster, smarter matching
-    require('nvim-treesitter.configs').setup({
-      matchup = {
-        enable = true,  -- Use treesitter instead of regex
-        disable = {},   -- Optional: list of languages to disable for
-      },
-    })
-  end,
 }
 

@@ -10,6 +10,7 @@ return {
       ensure_installed = { 'zig', 'bash', 'c', 'cpp', 'python', 'diff', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
       -- Autoinstall languages that are not installed
       auto_install = false,
+      matchup = { enabled = true },
       highlight = {
         enable = true,
         disable = { 'swift' },
