@@ -32,6 +32,58 @@ local comment_markers = {
   zig    = "//",
 }
 
+-- Assertions are intended to "fail" for bad values, so don't flag our heuristics inside them.
+-- (e.g. `assert(x <= max)` should not warn about `<= max`)
+local assert_patterns = {
+  lua = {
+    -- assert(expr)
+    "%f[%w_]assert%s*%(",
+  },
+  python = {
+    -- `assert expr` statement (also catches `if cond: assert expr`)
+    "%f[%w_]assert%s",
+  },
+  zig = {
+    -- std.debug.assert(cond)
+    "std%.debug%.assert%s*%(",
+    -- Common test assertions
+    "std%.testing%.expect%s*%(",
+    "std%.testing%.expectEqual%s*%(",
+    "std%.testing%.expectEqualStrings%s*%(",
+  },
+  rust = {
+    -- assert!(...), debug_assert!(...), assert_eq!(...), assert_ne!(...)
+    "assert!%s*%(",
+    "debug_assert!%s*%(",
+    "assert_eq!%s*%(",
+    "assert_ne!%s*%(",
+  },
+  c = {
+    -- assert(...), ASSERT(...)
+    "%f[%w_]assert%s*%(",
+    "%f[%w_]ASSERT%s*%(",
+  },
+  cpp = {
+    "%f[%w_]assert%s*%(",
+    "%f[%w_]ASSERT%s*%(",
+  },
+  sh = {},
+  bash = {},
+}
+
+local function is_assert_line(trimmed, filetype)
+  local pats = assert_patterns[filetype]
+  if not pats or #pats == 0 then
+    return false
+  end
+  for _, pat in ipairs(pats) do
+    if trimmed:find(pat) then
+      return true
+    end
+  end
+  return false
+end
+
 local function is_text_file(path)
   local stat = vim.loop.fs_stat(path)
   if not stat or stat.size == 0 then
@@ -64,8 +116,11 @@ local function lint_lines(lines, full_path, filetype)
 
   for i, line in ipairs(lines) do
     local trimmed = line:match("^%s*(.-)%s*$")
-    -- Skip if it's a comment line
-    if not (comment_marker and trimmed:match("^" .. comment_marker)) then
+
+    -- Skip if it's a comment line or an assertion line.
+    if not (comment_marker and trimmed:match("^" .. comment_marker))
+      and not is_assert_line(trimmed, filetype)
+    then
       for _, p in ipairs(M.patterns) do
         if string.find(line, p.regex) then
           table.insert(results, {
