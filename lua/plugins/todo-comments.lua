@@ -27,6 +27,10 @@ return {
         },
       },
     },
+    keys = {
+      vim.keymap.set("n", "<leader>st", "<cmd>TodoTelescope<cr>", { desc = "[S]earch [T]odos" }),
+      vim.keymap.set("n", "<leader>sT", "<cmd>TodoQuickFix<cr>",  { desc = "[S]end [T]odos to quickfix" }),
+    },
   },
 }
 -- vim: ts=2 sts=2 sw=2 et

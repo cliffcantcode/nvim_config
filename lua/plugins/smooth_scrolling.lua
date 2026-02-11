@@ -4,7 +4,7 @@ return {
   config = function()
     require('neoscroll').setup {
       easing = 'quadratic',
-      mappings = {},
+      mappings = { "<C-u>", "<C-d>", "<C-b>", "<C-f>", "zt", "zz", "zb" },
       hide_cursor = false,
       stop_eof = true,
       respect_scrolloff = false,
