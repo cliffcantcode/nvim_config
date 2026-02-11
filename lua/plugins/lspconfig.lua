@@ -11,11 +11,9 @@ return {
 
     vim.lsp.config("zls", {
       capabilities = capabilities,
-      root_dir = vim.fs.root(0, {
-        "build.zig",
-        "build.zig.zon",
-        ".git",
-      }),
+      root_dir = function(bufnr)
+        return vim.fs.root(bufnr, { "build.zig", "build.zig.zon", ".git" })
+      end,
       single_file_support = true,
       settings = {
         zls = {
