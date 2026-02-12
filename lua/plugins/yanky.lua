@@ -5,9 +5,14 @@ return {
     event = "VeryLazy",
     opts = {
       highlight = {
-        on_put = true,
-        on_yank = true,
+        on_put = false,
+        on_yank = false,
         timer = 250,
+      },
+      ring = {
+        history_length = 50,
+        storage = "memory",
+        sync_with_numbered_registers = false,
       },
       preserve_cursor_position = {
         enabled = true,
@@ -22,14 +27,13 @@ return {
       end)
 
       -- Core mappings (keeps your muscle memory; adds yank-ring behavior)
-      vim.keymap.set({ "n", "x" }, "y", "<Plug>(YankyYank)")
-      vim.keymap.set("n", "p", "<Plug>(YankyPutAfter)")
-      vim.keymap.set("n", "P", "<Plug>(YankyPutBefore)")
-      vim.keymap.set("n", "gp", "<Plug>(YankyGPutAfter)")
-      vim.keymap.set("n", "gP", "<Plug>(YankyGPutBefore)")
+      vim.keymap.set({ "n", "x" }, "p", "<Plug>(YankyPutAfter)")
+      vim.keymap.set({ "n", "x" }, "P", "<Plug>(YankyPutBefore)")
+      vim.keymap.set({ "n", "x" }, "gp", "<Plug>(YankyGPutAfter)")
+      vim.keymap.set({ "n", "x" }, "gP", "<Plug>(YankyGPutBefore)")
 
-      vim.keymap.set("n", "[y", "<Plug>(YankyCycleForward)", { desc = "Yank ring next" })
-      vim.keymap.set("n", "]y", "<Plug>(YankyCycleBackward)", { desc = "Yank ring prev" })
+      vim.keymap.set({ "n", "x" }, "[y", "<Plug>(YankyCycleForward)", { desc = "Yank ring next" })
+      vim.keymap.set({ "n", "x" }, "]y", "<Plug>(YankyCycleBackward)", { desc = "Yank ring prev" })
 
       vim.keymap.set(
         "n",
