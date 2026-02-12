@@ -1,4 +1,5 @@
 -- TODO: Try this out.
+-- TODO: Keymap :tabclose
 return {
   "sindrets/diffview.nvim",
   cmd = { "DiffviewOpen", "DiffviewFileHistory" },

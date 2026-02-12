@@ -1,4 +1,4 @@
--- TODO: Try this out.
+-- TODO: Git rid of the gutter.
 return {
   "kevinhwang91/nvim-ufo",
   dependencies = { "kevinhwang91/promise-async" },
@@ -9,6 +9,11 @@ return {
     vim.o.foldlevelstart = 99
     vim.o.foldenable = true
   end,
+  opts = {
+    provider_selector = function(_, _, _)
+      return { "lsp", "treesitter", "indent" }
+    end,
+  },
   config = function()
     require("ufo").setup()
     vim.keymap.set("n", "zR", require("ufo").openAllFolds, { desc = "Open all folds" })
