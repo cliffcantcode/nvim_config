@@ -499,6 +499,7 @@ local function setup_buffer_bindings(bufnr)
   end
 
   if not vim.b[bufnr]._switch_map then
+    -- NOTE: Overrides mark s
     vim.keymap.set({ "n", "x" }, "ms", switch_token, {
       buffer = bufnr,
       silent = true,

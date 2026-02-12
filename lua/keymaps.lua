@@ -10,7 +10,7 @@ vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower win
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 -- Simple writing and quitting are a bit awkward
-vim.keymap.set('n', ',w', ':w<CR>', { desc = '[w]rite to file' })
+vim.keymap.set('n', '<leader>w', ':w<CR>', { desc = '[w]rite to file' })
 vim.keymap.set('n', '<leader>q', ':q<CR>', { desc = '[q]uit file' })
 
 -- Diagnostics
@@ -32,8 +32,8 @@ vim.keymap.set('n', '<right>', ':bnext<CR>', { desc = 'Move to the next buffer' 
 -- vim.keymap.set('n', ',z', ':w<CR> :!zig build run -Ddev<CR>', { desc = 'Run the [z]ig build script.' })
 
 -- Source the current buffer
-vim.keymap.set('n', ',s', ':w<CR> :source ' .. vim.fn.stdpath('config') .. '/init.lua<CR>',
-  { desc = '[s]ource the init.lua changes.' })
+vim.keymap.set('n', '<leader>ns', ':w<CR> :source ' .. vim.fn.stdpath('config') .. '/init.lua<CR>',
+  { desc = '[n]eovim [s]ource the init.lua changes.' })
 
 -- Replace word with what's in the clipboard.
 vim.keymap.set('n', 'cp', 'ciw<ESC>"0pyiw', { desc = 'Swap with clipboard text.' })
@@ -44,7 +44,7 @@ vim.keymap.set('n', ':hs<CR>', ':split<CR>', { desc = 'Horizontal window split.'
 
 -- Making the undolist easier to use.
 vim.keymap.set('n', '<leader>u', ':undolist<CR>', { desc = '[u]ndo list' })
-vim.keymap.set('n', 'U', ':undo ')
+vim.keymap.set('n', '<leader>U', ':undo ')
 
 vim.keymap.set('n', '<leader>%', '%:print<CR>%', { desc = 'Print paired bracket line.' })
 
