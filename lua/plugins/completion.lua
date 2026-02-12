@@ -93,7 +93,7 @@ return {
     dependencies = {
       "neovim/nvim-lspconfig",
     },
-    event = 'InsertEnter',
+    event = { 'VeryLazy', 'InsertEnter' },
     version = "*",
     config = function()
       local blink = require("blink.cmp")
