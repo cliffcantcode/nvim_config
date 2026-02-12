@@ -11,13 +11,13 @@ return {
     cmd = "Telescope",
     -- Lazy.nvim will create these mappings in a way that loads Telescope on demand.
     keys = {
-      { "<leader>sh", tbuiltin("help_tags"), desc = "[S]earch [H]elp" },
-      { "<leader>sk", tbuiltin("keymaps"), desc = "[S]earch [K]eymaps" },
       { "<leader>sf", function()
         local builting = require("telescope.builtin")
         local ok = pcall(builtin.git_files, { show_untracked = true })
         if not ok then builtin.find_files() end
       end, desc = "[S]earch [F]iles" },
+      { "<leader>sh", tbuiltin("help_tags"), desc = "[S]earch [H]elp" },
+      { "<leader>sk", tbuiltin("keymaps"), desc = "[S]earch [K]eymaps" },
       { "<leader>ss", tbuiltin("builtin"), desc = "[S]earch [S]elect Telescope" },
       { "<leader>sw", tbuiltin("grep_string"), desc = "[S]earch current [w]ord" },
       { "<leader>sg", tbuiltin("live_grep"), desc = "[S]earch by [G]rep" },
