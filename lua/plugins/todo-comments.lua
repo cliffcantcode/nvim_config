@@ -38,6 +38,7 @@ return {
           "--line-number",
           "--column",
 
+          -- TODO: Get this to exclude any local dependencies/ or ../tracy/
           -- Exclude THIS config file anywhere it appears:
           "--glob=!**/lua/plugins/todo-comments.lua",
 
