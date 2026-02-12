@@ -56,7 +56,7 @@ vim.opt.inccommand = 'split'
 vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 12
+vim.opt.scrolloff = 17
 vim.opt.sidescrolloff = 5
 
 -- Make command line completion more usable

@@ -1,4 +1,3 @@
--- TODO: Try this out.
 return {
   {
     "MagicDuck/grug-far.nvim",
