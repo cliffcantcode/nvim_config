@@ -39,8 +39,8 @@ vim.keymap.set('n', '<leader>ns', ':w<CR> :source ' .. vim.fn.stdpath('config') 
 vim.keymap.set('n', 'cp', 'ciw<ESC>"0pyiw', { desc = 'Swap with clipboard text.' })
 vim.keymap.set('n', 'cP', 'ciW<ESC>"0pyiW', { desc = 'Swap with clipboard text.' })
 
--- Splitting horizontal should match the vertical command (:vs).
-vim.keymap.set('n', ':hs<CR>', ':split<CR>', { desc = 'Horizontal window split.' })
+vim.keymap.set('n', '<leader>hs<CR>', '<cmd>split<CR>', { desc = '[h]orizontal [s]plit window.' })
+vim.keymap.set('n', '<leader>vs<CR>', '<cmd>vsplit<CR>', { desc = '[v]ertical [s]plit window.' })
 
 -- Making the undolist easier to use.
 vim.keymap.set('n', '<leader>u', ':undolist<CR>', { desc = '[u]ndo list' })
