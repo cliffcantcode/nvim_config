@@ -10,6 +10,7 @@ return {
     -- Runs even before the plugin is loaded (good for startup / directory args).
     init = function()
       local group = vim.api.nvim_create_augroup("OilAutoOpen", { clear = true })
+      local preview_group = vim.api.nvim_create_augroup("OilPreviewDefault", { clear = true })
 
       local function is_empty_unnamed_buffer(bufnr)
         if vim.bo[bufnr].buftype ~= "" then return false end
@@ -64,6 +65,20 @@ return {
             if is_empty_unnamed_buffer(0) and not has_real_file_buffer() then
               open_oil()
             end
+          end)
+        end,
+      })
+
+      -- Open the preview pane automatically when entering an Oil buffer.
+      vim.api.nvim_create_autocmd("FileType", {
+        group = preview_group,
+        pattern = "oil",
+        desc = "Oil: open preview window by default",
+        callback = function()
+          vim.schedule(function()
+            local ok, oil = pcall(require, "oil")
+            if not ok then return end
+            pcall(oil.open_preview, {})
           end)
         end,
       })
