@@ -5,6 +5,7 @@ M.dimension_exclusion_list = {
   max = true,
   INDEX = true,
   index = true,
+  deadzone = true,
 }
 
 local exclusion_keys = vim.tbl_keys(M.dimension_exclusion_list)
@@ -195,6 +196,7 @@ local function run_tests()
     { "MAX_X",        "MAX_Y",        f },
     { "max_x",        "max_y",        f },
     { "index",        "index",        f },
+    { "deadzone",     "deadzone",     f },
 
     -- multi-match in one token
     { "z_to_x",       "x_to_y",       f },

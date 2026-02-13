@@ -7,7 +7,6 @@ return {
     },
     dependencies = { "nvim-tree/nvim-web-devicons" },
 
-    -- Runs even before the plugin is loaded (good for startup / directory args).
     init = function()
       local group = vim.api.nvim_create_augroup("OilAutoOpen", { clear = true })
       local preview_group = vim.api.nvim_create_augroup("OilPreviewDefault", { clear = true })
@@ -16,7 +15,6 @@ return {
         if vim.bo[bufnr].buftype ~= "" then return false end
         if vim.api.nvim_buf_get_name(bufnr) ~= "" then return false end
         if vim.bo[bufnr].modified then return false end
-
         local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
         return #lines == 1 and lines[1] == ""
       end
@@ -49,7 +47,6 @@ return {
         group = group,
         desc = "Auto-open Oil for directories or when landing on an empty buffer",
         callback = function()
-          -- schedule() prevents fighting UI plugin windows during startup
           vim.schedule(function()
             if vim.bo.buftype ~= "" or vim.bo.filetype == "oil" then return end
 
@@ -69,19 +66,36 @@ return {
         end,
       })
 
-      -- Open the preview pane automatically when entering an Oil buffer.
-      -- vim.api.nvim_create_autocmd("FileType", {
-      --   group = preview_group,
-      --   pattern = "oil",
-      --   desc = "Oil: open preview window by default",
-      --   callback = function()
-      --     vim.schedule(function()
-      --       local ok, oil = pcall(require, "oil")
-      --       if not ok then return end
-      --       pcall(oil.open_preview, {})
-      --     end)
-      --   end,
-      -- })
+      -- Open preview *only after* Oil is fully entered, and only if there's an entry under cursor.
+      vim.api.nvim_create_autocmd("User", {
+        group = preview_group,
+        pattern = "OilEnter",
+        callback = vim.schedule_wrap(function(args)
+          local ok, oil = pcall(require, "oil")
+          if not ok then return end
+
+          local bufnr = args.data and args.data.buf
+          if not bufnr or vim.api.nvim_get_current_buf() ~= bufnr then
+            return
+          end
+
+          -- Ensure cursor is on an actual entry line (sometimes it isn't yet)
+          if not oil.get_cursor_entry() then
+            local line_count = vim.api.nvim_buf_line_count(bufnr)
+            for lnum = 1, line_count do
+              if oil.get_entry_on_line(bufnr, lnum) then
+                pcall(vim.api.nvim_win_set_cursor, 0, { lnum, 0 })
+                break
+              end
+            end
+          end
+
+          if oil.get_cursor_entry() then
+            -- open_preview previews the entry under cursor
+            pcall(oil.open_preview, {})
+          end
+        end),
+      })
     end,
 
     opts = {

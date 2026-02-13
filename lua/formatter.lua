@@ -1,4 +1,8 @@
--- TODO: Make sure this works.
+-- TODO: This case doesn't work.
+-- const prog_fireball = Program{
+--     .ops = &.{.deal_damage_enemy_hero},
+--     .a = &.{6},
+-- }
 local M = {}
 
 vim.api.nvim_create_autocmd("BufWritePre", {
