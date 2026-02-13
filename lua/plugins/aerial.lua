@@ -40,9 +40,7 @@ return {
 
     backends = {
       ["_"] = { "treesitter", "lsp", "markdown", "asciidoc", "man" },
-      sql = { "lsp" },
-      pgsql = { "lsp" },
-      plpgsql = { "lsp" },
+      -- sql = { "lsp" }, -- TODO: Try :TSUpdate sql instead.
     },
   },
 
@@ -53,26 +51,31 @@ return {
     -- (Prevents "oops I'm stuck with only the sidebar" after closing other windows.)
     local group = vim.api.nvim_create_augroup("AerialCloseIfLast", { clear = true })
 
-    vim.api.nvim_create_autocmd("BufEnter", {
-      group = group,
-      callback = function()
-        if vim.bo.filetype ~= "aerial" then
+    local function close_if_last()
+      vim.schedule(function()
+        local wins = vim.api.nvim_tabpage_list_wins(0)
+        -- Ignore floating windows
+        local normal_wins = vim.tbl_filter(function(win)
+          local cfg = vim.api.nvim_win_get_config(win)
+          return cfg.relative == ""
+        end, wins)
+
+        if #normal_wins ~= 1 then
           return
         end
 
-        -- If every window in this tabpage is an aerial window, quit.
-        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-          local buf = vim.api.nvim_win_get_buf(win)
-          if vim.bo[buf].filetype ~= "aerial" then
-            return
-          end
-        end
-
-        -- Use quit (not close) so it works even if this is the last window.
-        vim.schedule(function()
+        local only_win = normal_wins[1]
+        local only_buf = vim.api.nvim_win_get_buf(only_win)
+        if vim.bo[only_buf].filetype == "aerial" then
           pcall(vim.cmd, "quit")
-        end)
-      end,
+        end
+      end)
+    end
+
+    vim.api.nvim_create_autocmd({ "WinEnter", "WinClosed", "BufEnter" }, {
+      group = group,
+      desc = "Close Neovim tab if Aerial is the last remaining window",
+      callback = close_if_last,
     })
   end,
 
