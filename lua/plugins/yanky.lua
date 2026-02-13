@@ -34,6 +34,8 @@ return {
 
       vim.keymap.set({ "n", "x" }, "[y", "<Plug>(YankyCycleForward)", { desc = "Yank ring next" })
       vim.keymap.set({ "n", "x" }, "]y", "<Plug>(YankyCycleBackward)", { desc = "Yank ring prev" })
+      vim.keymap.set("n", "<C-n", "<Plug>(YankyCycleForward)", { desc = "Yank ring next" })
+      vim.keymap.set("n", "<C-p", "<Plug>(YankyCycleBackward)", { desc = "Yank ring prev" })
 
       vim.keymap.set(
         "n",

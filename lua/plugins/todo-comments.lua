@@ -41,9 +41,14 @@ return {
           -- TODO: Get this to exclude any local dependencies/ or ../tracy/
           -- Exclude THIS config file anywhere it appears:
           "--glob=!**/lua/plugins/todo-comments.lua",
-
+          -- Exclude, it has false todos in tests.
           "--glob=!**/lua/autocorrect.lua",
-
+          -- Exclude vendored/third-party dirs (common sources of noise):
+          "--glob=!dependencies/**",
+          "--glob=!**/dependencies/**",
+          -- Exclude tracy checkout if it's inside (or nested within) the search root:
+          "--glob=!tracy/**",
+          "--glob=!**/tracy/**",
           -- Optional: exclude lockfiles, build dirs, etc:
           "--glob=!**/lazy-lock.json",
           "--glob=!**/zig-cache/**",

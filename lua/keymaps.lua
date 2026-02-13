@@ -27,6 +27,27 @@ vim.keymap.set('n', '<up>',   ':m .-2<CR>==', { desc = 'Move line up once' })
 vim.keymap.set('n', '<left>',  ':bprev<CR>', { desc = 'Move to the previous buffer' })
 vim.keymap.set('n', '<right>', ':bnext<CR>', { desc = 'Move to the next buffer' })
 
+-- TODO: Try these out.
+-- Tabs
+vim.keymap.set('n', ']t', '<cmd>tabnext<cr>', { desc = 'Next tab' })
+vim.keymap.set('n', '[t', '<cmd>tabprevious<cr>', { desc = 'Previous tab' })
+
+vim.keymap.set('n', '<leader><tab>n', '<cmd>tabnext<cr>', { desc = 'Next tab' })
+vim.keymap.set('n', '<leader><tab>p', '<cmd>tabprevious<cr>', { desc = 'Previous tab' })
+vim.keymap.set('n', '<leader><tab>t', '<cmd>tabnew<cr>', { desc = 'New tab' })
+vim.keymap.set('n', '<leader><tab>c', '<cmd>tabclose<cr>', { desc = 'Close tab' })
+vim.keymap.set('n', '<leader><tab>o', '<cmd>tabonly<cr>', { desc = 'Close other tabs' })
+
+-- Move current tab left/right
+vim.keymap.set('n', '<leader><tab>h', '<cmd>tabmove -1<cr>', { desc = 'Move tab left' })
+vim.keymap.set('n', '<leader><tab>l', '<cmd>tabmove +1<cr>', { desc = 'Move tab right' })
+
+-- Jump directly to tab #
+for i = 1, 9 do
+  vim.keymap.set('n', '<leader><tab>' .. i, i .. 'gt', { desc = 'Go to tab ' .. i })
+end
+vim.keymap.set('n', '<leader><tab>0', '<cmd>tablast<cr>', { desc = 'Go to last tab' })
+
 -- Run the project's build script. Change this to match the desired project's build script
 -- vim.keymap.set('n', ',b', ':w<CR> :!P:\\handmade\\code\\build.bat<CR>', { desc = 'Run [b]uild script.' })
 -- vim.keymap.set('n', ',z', ':w<CR> :!zig build run -Ddev<CR>', { desc = 'Run the [z]ig build script.' })
