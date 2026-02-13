@@ -38,6 +38,17 @@ return {
       },
     },
 
+    icons = {
+      Class = "",
+      Constructor = "",
+      Enum = "",
+      Function = "",
+      Interface = "",
+      Module = "",
+      Method = "",
+      Struct = "",
+    },
+
     backends = {
       ["_"] = { "treesitter", "lsp", "markdown", "asciidoc", "man" },
       sql = { "lsp" },
