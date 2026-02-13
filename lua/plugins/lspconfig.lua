@@ -54,6 +54,7 @@ return {
           })
         end
 
+        -- TODO: For some reason this stopped working.
         map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
         map('<leader>gd', function() require('telescope.builtin').lsp_definitions() end,      '[G]oto [D]efinition')
         map('<leader>gr', function() require('telescope.builtin').lsp_references() end,       '[G]oto [R]eferences')
