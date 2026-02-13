@@ -61,6 +61,7 @@ vim.keymap.set('n', 'cp', 'ciw<ESC>"0pyiw', { desc = 'Swap with clipboard text.'
 vim.keymap.set('n', 'cP', 'ciW<ESC>"0pyiW', { desc = 'Swap with clipboard text.' })
 
 vim.keymap.set('n', '<leader>hs<CR>', '<cmd>split<CR>', { desc = '[h]orizontal [s]plit window.' })
+-- TODO: This is not working for some reason.
 vim.keymap.set('n', '<leader>vs<CR>', '<cmd>vsplit<CR>', { desc = '[v]ertical [s]plit window.' })
 
 -- Making the undolist easier to use.

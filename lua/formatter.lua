@@ -1,12 +1,8 @@
--- TODO: In zig just add the ; at the end of a const.
+-- TODO: Make sure this works.
 local M = {}
 
----------------------------------------------------------------------------
--- Semicolon fixer for container declarations
----------------------------------------------------------------------------
-
 vim.api.nvim_create_autocmd("BufWritePre", {
-  desc = "Ensure container declarations end with a semicolon (Zig via TS, C-like via heuristic)",
+  desc = "Fix a few common missing-semicolon cases before formatting (Zig via TS, C-like via heuristic)",
   group = vim.api.nvim_create_augroup("ContainerSemicolonFix", { clear = true }),
   pattern = { "*.zig", "*.c", "*.h", "*.cpp", "*.hpp" },
   callback = function()
@@ -17,7 +13,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     local ft = vim.bo.filetype
 
     -----------------------------------------------------------------------
-    -- Zig: Treesitter-based fix for struct/union/enum declarations
+    -- Zig: Treesitter-based fix for missing semicolons
     -----------------------------------------------------------------------
     if ft == "zig" then
       local ok_ts, ts = pcall(require, "vim.treesitter")
@@ -47,35 +43,113 @@ vim.api.nvim_create_autocmd("BufWritePre", {
         return vim.api.nvim_buf_get_lines(buf, row, row + 1, false)[1]
       end
 
-      local function insert_semicolon(buf, row, col_after)
-        -- Insert ";" at (row, col_after) — col_after is 0-based
-        vim.api.nvim_buf_set_text(buf, row, col_after, row, col_after, { ";" })
+      -- Collect edits first; apply from bottom->top so earlier inserts don't shift later ranges.
+      local inserts = {}
+      local seen = {}
+
+      local function add_insert(row, col)
+        if row < 0 or col < 0 then return end
+        local key = row .. ":" .. col
+        if seen[key] then return end
+        seen[key] = true
+        table.insert(inserts, { row = row, col = col })
+      end
+
+      local function needs_semicolon(row, col)
+        local line = get_line(bufnr, row)
+        if not line then return false end
+
+        -- Clamp insertion to EOL.
+        if col > #line then col = #line end
+
+        -- If there's already a ';' or ',' at/after insertion point, do nothing.
+        local after = line:sub(col + 1) -- col is 0-based
+        if after:match("^%s*[;,]") then
+          return false
+        end
+
+        -- If the last non-space char before insertion is already ';' or ',', do nothing.
+        local before = line:sub(1, col)
+        if before:match("[;,]%s*$") then
+          return false
+        end
+
+        return true
+      end
+
+      local function node_text(node)
+        -- Neovim API moved this over time; support both.
+        if vim.treesitter.get_node_text then
+          local ok, txt = pcall(vim.treesitter.get_node_text, node, bufnr)
+          if ok then return txt end
+        end
+        if vim.treesitter.query and vim.treesitter.query.get_node_text then
+          local ok, txt = pcall(vim.treesitter.query.get_node_text, node, bufnr)
+          if ok then return txt end
+        end
+        return nil
+      end
+
+      local const_modifiers = {
+        pub = true,
+        export = true,
+        extern = true,
+        comptime = true,
+        inline = true,
+        noinline = true,
+        threadlocal = true,
+      }
+
+      local function is_const_variable_declaration(node)
+        local txt = node_text(node)
+        if not txt then return false end
+
+        local seen_tok = 0
+        for tok in txt:gmatch("%S+") do
+          seen_tok = seen_tok + 1
+          if not const_modifiers[tok] then
+            return tok == "const" or tok == "var"
+          end
+          if seen_tok >= 12 then
+            break
+          end
+        end
+        return false
       end
 
       local container_kinds = {
         struct_declaration = true,
-        union_declaration  = true,
-        enum_declaration   = true,
+        union_declaration = true,
+        enum_declaration = true,
+        opaque_declaration = true,
       }
 
       local function visit(node)
         local kind = node:type()
 
+        -- 1) struct/union/enum/opaque literals: ensure `};` (or `},` in comma contexts).
         if container_kinds[kind] then
-          local sr, sc, er, ec = node:range()
+          local _, _, er, ec = node:range()
           local line = get_line(bufnr, er)
           if line then
-            -- ec is end-exclusive, so last column in node on this line is ec - 1
             local last_col_in_node = math.min(ec, #line) - 1
             if last_col_in_node >= 0 then
               local ch = line:sub(last_col_in_node + 1, last_col_in_node + 1)
               if ch == "}" then
-                local after = line:sub(last_col_in_node + 2)
-                -- Only add ';' if there isn't already one right after the '}'
-                if not after:match("^%s*[;,]") then
-                  insert_semicolon(bufnr, er, last_col_in_node + 1)
-                end
+                add_insert(er, last_col_in_node + 1)
               end
+            end
+          end
+        end
+
+        -- 2) `const` variable declarations: ensure they end with `;`.
+        if kind == "variable_declaration" and is_const_variable_declaration(node) then
+          local _, _, er, ec = node:range()
+          local line = get_line(bufnr, er)
+          if line then
+            local last_col_in_node = math.min(ec, #line) - 1
+            if last_col_in_node >= 0 then
+              add_insert(er, last_col_in_node + 1)
             end
           end
         end
@@ -88,6 +162,19 @@ vim.api.nvim_create_autocmd("BufWritePre", {
       end
 
       visit(root)
+
+      table.sort(inserts, function(a, b)
+        if a.row ~= b.row then
+          return a.row > b.row
+        end
+        return a.col > b.col
+      end)
+
+      for _, pos in ipairs(inserts) do
+        if needs_semicolon(pos.row, pos.col) then
+          vim.api.nvim_buf_set_text(bufnr, pos.row, pos.col, pos.row, pos.col, { ";" })
+        end
+      end
 
       -- Restore the cursor / view
       vim.fn.winrestview(view)

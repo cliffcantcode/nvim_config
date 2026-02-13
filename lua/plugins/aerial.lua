@@ -40,7 +40,7 @@ return {
 
     backends = {
       ["_"] = { "treesitter", "lsp", "markdown", "asciidoc", "man" },
-      -- sql = { "lsp" }, -- TODO: Try :TSUpdate sql instead.
+      sql = { "lsp" },
     },
   },
 

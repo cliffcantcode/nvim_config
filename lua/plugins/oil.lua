@@ -70,18 +70,18 @@ return {
       })
 
       -- Open the preview pane automatically when entering an Oil buffer.
-      vim.api.nvim_create_autocmd("FileType", {
-        group = preview_group,
-        pattern = "oil",
-        desc = "Oil: open preview window by default",
-        callback = function()
-          vim.schedule(function()
-            local ok, oil = pcall(require, "oil")
-            if not ok then return end
-            pcall(oil.open_preview, {})
-          end)
-        end,
-      })
+      -- vim.api.nvim_create_autocmd("FileType", {
+      --   group = preview_group,
+      --   pattern = "oil",
+      --   desc = "Oil: open preview window by default",
+      --   callback = function()
+      --     vim.schedule(function()
+      --       local ok, oil = pcall(require, "oil")
+      --       if not ok then return end
+      --       pcall(oil.open_preview, {})
+      --     end)
+      --   end,
+      -- })
     end,
 
     opts = {
