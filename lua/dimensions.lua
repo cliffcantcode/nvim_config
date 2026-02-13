@@ -1,3 +1,4 @@
+-- TODO: Get this to not flip the z:                         const lstick_y_live = if (@abs(lstick_y_raw) > deadzone) lstick_y_raw else 0.0;
 local M = {}
 M.dimension_exclusion_list = {
   MAX = true,
