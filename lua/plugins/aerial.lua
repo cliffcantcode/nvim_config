@@ -1,25 +1,3 @@
--- TODO: Fix this error:
--- Error executing Lua callback: ...ams/nvim/share/nvim/runtime/lua/vim/treesitter/qu
--- ery.lua:373: Query error at 37:2. Invalid node type "create_policy":
--- (create_policy
---  ^
---
--- stack traceback:
---         [C]: in function '_ts_parse_query'
---         ...ams/nvim/share/nvim/runtime/lua/vim/treesitter/query.lua:373: in functi
--- on 'fn'
---         ...ograms/nvim/share/nvim/runtime/lua/vim/func/_memoize.lua:78: in functio
--- n 'fn'
---         ...ograms/nvim/share/nvim/runtime/lua/vim/func/_memoize.lua:78: in functio
--- n 'get'
---         ...y/aerial.nvim/lua/aerial/backends/treesitter/helpers.lua:43: in functio
--- n 'get_query'
---         ...lazy/aerial.nvim/lua/aerial/backends/treesitter/init.lua:22: in functio
--- n 'is_supported'                                                                          .../nvim-data/lazy/aerial.nvim/lua/aerial/backends/init.lua:40: in function 'is_supported'                                                                          .../nvim-data/lazy/aerial.nvim/lua/aerial/backends/init.lua:73: in function 'get_best_backend'                                                                      .../nvim-data/lazy/aerial.nvim/lua/aerial/backends/init.lua:147: in function 'get'                                                                                  ...a/Local/nvim-data/lazy/aerial.nvim/lua/aerial/window.lua:335: in function 'open'                                                                                 ...a/Local/nvim-data/lazy/aerial.nvim/lua/aerial/window.lua:373: in function 'toggle'                                                                               ...ata/Local/nvim-data/lazy/aerial.nvim/lua/aerial/init.lua:304: in functi
--- on 'toggle'
---         .../Local/nvim-data/lazy/aerial.nvim/lua/aerial/command.lua:8: in function
---  <.../Local/nvim-data/lazy/aerial.nvim/lua/aerial/command.lua:3>
-
 return {
   "stevearc/aerial.nvim",
   event = "BufReadPost",
@@ -58,6 +36,13 @@ return {
         winblend = 40,
         winhl = "Normal:NormalFloat,SignColumn:NormalFloat",
       },
+    },
+
+    backends = {
+      ["_"] = { "treesitter", "lsp", "markdown", "asciidoc", "man" },
+      sql = { "lsp" },
+      pgsql = { "lsp" },
+      plpgsql = { "lsp" },
     },
   },
 
