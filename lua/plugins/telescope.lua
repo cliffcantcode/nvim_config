@@ -12,7 +12,7 @@ return {
     -- Lazy.nvim will create these mappings in a way that loads Telescope on demand.
     keys = {
       { "<leader>sf", function()
-        local builting = require("telescope.builtin")
+        local builtin = require("telescope.builtin")
         local ok = pcall(builtin.git_files, { show_untracked = true })
         if not ok then builtin.find_files() end
       end, desc = "[S]earch [F]iles" },
@@ -66,7 +66,7 @@ return {
       },
     },
 
-    dependencies = {
+    denendencies = {
       "nvim-lua/plenary.nvim",
       "nvim-telescope/telescope-ui-select.nvim",
       { "nvim-tree/nvim-web-devicons", enabled = vim.g.have_nerd_font },

@@ -3,8 +3,8 @@ return {
   "sindrets/diffview.nvim",
   cmd = { "DiffviewOpen", "DiffviewFileHistory" },
   keys = {
-    { "<leader>gdv", "<cmd>DiffviewOpen<CR>", desc = "Git Diffview" },
-    { "<leader>gdfh", "<cmd>DiffviewFileHistory<CR>", desc = "Git File History" },
+    { "<leader>dv", "<cmd>DiffviewOpen<CR>", desc = "Git Diffview" },
+    { "<leader>dh", "<cmd>DiffviewFileHistory<CR>", desc = "Git File History" },
   },
 }
 
