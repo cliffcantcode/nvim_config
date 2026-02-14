@@ -8,12 +8,6 @@
 --
 -- const headless = false; // TODO: Comment blocking end of const declaration.
 
-const prog_fireball = Program{
-    .ops = &.{.deal_damage_enemy_hero},
-    .a = &.{6},
-}
-const headless = false // TODO: Comment blocking end of const declaration.
-
 local M = {}
 
 vim.api.nvim_create_autocmd("BufWritePre", {
