@@ -1,8 +1,10 @@
--- TODO: This case doesn't work.
+-- TODO: Doesn't work in a bracketed block, or if there are comments after.
 -- const prog_fireball = Program{
 --     .ops = &.{.deal_damage_enemy_hero},
 --     .a = &.{6},
 -- }
+-- const headless = false // TODO: Comment blocking end of const declaration.
+-- const sleep_ms: u64 = @intFromFloat(@max(1.0, (time_to_sleep * 1000.0 - 1.0)))
 local M = {}
 
 vim.api.nvim_create_autocmd("BufWritePre", {
