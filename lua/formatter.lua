@@ -1,9 +1,19 @@
--- TODO: Doesn't work in a bracketed block, or if there are comments after.
+-- TODO: Doesn't work for the first two.
+-- const headed = false // TODO: Comment blocking end of const declaration.
+--
 -- const prog_fireball = Program{
---     .ops = &.{.deal_damage_enemy_hero},
---     .a = &.{6},
--- }
--- const headless = false // TODO: Comment blocking end of const declaration.
+--         .ops = &.{.deal_damage_enemy_hero},
+--         .a = &.{6},
+--     }
+--
+-- const headless = false; // TODO: Comment blocking end of const declaration.
+
+const prog_fireball = Program{
+    .ops = &.{.deal_damage_enemy_hero},
+    .a = &.{6},
+}
+const headless = false // TODO: Comment blocking end of const declaration.
+
 local M = {}
 
 vim.api.nvim_create_autocmd("BufWritePre", {
@@ -46,6 +56,83 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 
       local function get_line(buf, row)
         return vim.api.nvim_buf_get_lines(buf, row, row + 1, false)[1]
+      end
+
+      -- Strip a real trailing Zig line comment (//...), but ignore:
+      -- - // inside normal strings: "http://..."
+      -- - Zig multiline string literals that start with \\ outside a string/char
+      local function strip_zig_line_comment(s)
+        local in_str, in_char, esc = false, false, false
+        local i, len = 1, #s
+
+        while i <= len - 1 do
+          local ch = s:sub(i, i)
+          local nxt = s:sub(i + 1, i + 1)
+
+          if in_str or in_char then
+            if esc then
+              esc = false
+            elseif ch == "\\" then
+              esc = true
+            elseif in_str and ch == "\"" then
+              in_str = false
+            elseif in_char and ch == "'" then
+              in_char = false
+            end
+            i = i + 1
+          else
+            if ch == "\"" then
+              in_str = true
+              i = i + 1
+            elseif ch == "'" then
+              in_char = true
+              i = i + 1
+            elseif ch == "\\" and nxt == "\\" then
+              -- Zig multiline string literal: rest of line is string content.
+              return s
+            elseif ch == "/" and nxt == "/" then
+              return s:sub(1, i - 1)
+            else
+              i = i + 1
+            end
+          end
+        end
+
+        return s
+      end
+
+      local function rtrim(s)
+        return (s:gsub("%s+$", ""))
+      end
+
+      -- Robust statement end:
+      -- - Works even when TS end column is 0 (common when ';' is missing and recovery kicks in)
+      -- - Inserts before trailing // comments
+      local function last_code_pos_in_node(node)
+        local sr, _, er, ec = node:range()
+        local last_row = vim.api.nvim_buf_line_count(bufnr) - 1
+        if er > last_row then er = last_row end
+
+        for row = er, sr, -1 do
+          local line = get_line(bufnr, row) or ""
+          local upto = #line
+
+          if row == er then
+            -- ec is 0-based exclusive
+            upto = math.min(ec, #line)
+          end
+
+          if upto > 0 then
+            local prefix = line:sub(1, upto)
+            prefix = rtrim(strip_zig_line_comment(prefix))
+            if #prefix > 0 then
+              -- insertion col is 0-based == prefix length
+              return row, #prefix
+            end
+          end
+        end
+
+        return nil
       end
 
       -- Collect edits first; apply from bottom->top so earlier inserts don't shift later ranges.
@@ -134,28 +221,21 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 
         -- 1) struct/union/enum/opaque literals: ensure `};` (or `},` in comma contexts).
         if container_kinds[kind] then
-          local _, _, er, ec = node:range()
-          local line = get_line(bufnr, er)
-          if line then
-            local last_col_in_node = math.min(ec, #line) - 1
-            if last_col_in_node >= 0 then
-              local ch = line:sub(last_col_in_node + 1, last_col_in_node + 1)
-              if ch == "}" then
-                add_insert(er, last_col_in_node + 1)
-              end
+          local row, col = last_code_pos_in_node(node)
+          if row and col then
+            local line = get_line(bufnr, row)
+            local last_ch = line and line:sub(col, col) or nil -- col is len(prefix) => last char (1-based)
+            if last_ch == "}" then
+              add_insert(row, col) -- insert after last char
             end
           end
         end
 
         -- 2) `const` variable declarations: ensure they end with `;`.
         if kind == "variable_declaration" and is_const_variable_declaration(node) then
-          local _, _, er, ec = node:range()
-          local line = get_line(bufnr, er)
-          if line then
-            local last_col_in_node = math.min(ec, #line) - 1
-            if last_col_in_node >= 0 then
-              add_insert(er, last_col_in_node + 1)
-            end
+          local row, col = last_code_pos_in_node(node)
+          if row and col then
+            add_insert(row, col)
           end
         end
 
