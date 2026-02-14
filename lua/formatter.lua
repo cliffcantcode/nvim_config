@@ -7,6 +7,8 @@
 --     }
 --
 -- const headless = false; // TODO: Comment blocking end of const declaration.
+-- TODO: This case is also not working:
+--             const y_started_near_center = @abs(ctrl.start_y) < 0.3
 
 local M = {}
 
