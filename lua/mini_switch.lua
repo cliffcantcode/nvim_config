@@ -53,6 +53,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "NORTH", "SOUTH" },
   { "EAST", "WEST" },
   { "pushed", "raised" },
+  { "pitch", "yaw", "roll" },
 }
 
 local ft_defaults = {
