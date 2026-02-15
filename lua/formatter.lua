@@ -1,15 +1,3 @@
--- TODO: Doesn't work for the first two.
--- const headed = false // TODO: Comment blocking end of const declaration.
---
--- const prog_fireball = Program{
---         .ops = &.{.deal_damage_enemy_hero},
---         .a = &.{6},
---     }
---
--- const headless = false; // TODO: Comment blocking end of const declaration.
--- TODO: This case is also not working:
---             const y_started_near_center = @abs(ctrl.start_y) < 0.3
-
 local M = {}
 
 vim.api.nvim_create_autocmd("BufWritePre", {
@@ -44,6 +32,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
         vim.fn.winrestview(view)
         return
       end
+
       local root = tree:root()
       if not root then
         vim.fn.winrestview(view)
@@ -205,6 +194,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
         return false
       end
 
+      -- NOTE: This is for actual container declarations, not struct literals.
       local container_kinds = {
         struct_declaration = true,
         union_declaration = true,
@@ -215,19 +205,19 @@ vim.api.nvim_create_autocmd("BufWritePre", {
       local function visit(node)
         local kind = node:type()
 
-        -- 1) struct/union/enum/opaque literals: ensure `};` (or `},` in comma contexts).
+        -- 1) container declarations (rarely needed here, but cheap):
         if container_kinds[kind] then
           local row, col = last_code_pos_in_node(node)
           if row and col then
-            local line = get_line(bufnr, row)
-            local last_ch = line and line:sub(col, col) or nil -- col is len(prefix) => last char (1-based)
+            local line = get_line(bufnr, row) or ""
+            local last_ch = line:sub(col, col) -- col == len(prefix), 1-based index of last char
             if last_ch == "}" then
-              add_insert(row, col) -- insert after last char
+              add_insert(row, col)
             end
           end
         end
 
-        -- 2) `const` variable declarations: ensure they end with `;`.
+        -- 2) `const`/`var` declarations: ensure they end with `;`.
         if kind == "variable_declaration" and is_const_variable_declaration(node) then
           local row, col = last_code_pos_in_node(node)
           if row and col then
@@ -243,6 +233,72 @@ vim.api.nvim_create_autocmd("BufWritePre", {
       end
 
       visit(root)
+
+      -------------------------------------------------------------------
+      -- Fallback: TS recovery can swallow a decl when the next line starts
+      -- with another decl (classic: missing ';' before next `const`).
+      -- So do a conservative line-based pass:
+      --   - only lines that *start* with const/var (allowing modifiers)
+      --   - only when next nonblank line starts a new decl OR is '}' OR EOF
+      -------------------------------------------------------------------
+      local function line_starts_with_decl(line)
+        local code = rtrim(strip_zig_line_comment(line or ""))
+        if code == "" then return false end
+
+        local seen_tok = 0
+        for tok in code:gmatch("%S+") do
+          seen_tok = seen_tok + 1
+          if not const_modifiers[tok] then
+            return tok == "const" or tok == "var"
+          end
+          if seen_tok >= 12 then break end
+        end
+        return false
+      end
+
+      local function insert_col_for_line(line)
+        local code = rtrim(strip_zig_line_comment(line or ""))
+        if code == "" then return nil end
+
+        -- already terminated
+        if code:match("[;,]%s*$") then return nil end
+
+        -- obvious multi-line continuations
+        if code:match("[%({%[]%s*$") then return nil end
+        if code:match("[=+*/%-%^&|<>!,]%s*$") then return nil end
+
+        -- Insert before any trailing comment/whitespace: col is 0-based == #code
+        return #code
+      end
+
+      local function next_nonblank(row)
+        local last = vim.api.nvim_buf_line_count(bufnr) - 1
+        for r = row + 1, last do
+          local l = get_line(bufnr, r)
+          if l and l:find("%S") then
+            return r, l
+          end
+        end
+        return nil, nil
+      end
+
+      local last = vim.api.nvim_buf_line_count(bufnr) - 1
+      for row = 0, last do
+        local line = get_line(bufnr, row) or ""
+        if line_starts_with_decl(line) then
+          local col = insert_col_for_line(line)
+          if col then
+            local _, nxt = next_nonblank(row)
+            local nxt_code = rtrim(strip_zig_line_comment(nxt or ""))
+
+            if (not nxt)
+              or line_starts_with_decl(nxt)
+              or nxt_code:match("^%s*}") then
+              add_insert(row, col)
+            end
+          end
+        end
+      end
 
       table.sort(inserts, function(a, b)
         if a.row ~= b.row then
