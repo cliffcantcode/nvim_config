@@ -27,6 +27,7 @@ M.replacements = {
   ["intialized"] = "initialized",
   ["defualt"] = "default",
   ["nvmi"] = "nvim",
+  ["alliged"] = "aligned",
 }
 
 M.filetype_replacements = {
