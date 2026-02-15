@@ -59,8 +59,8 @@ return {
 
     -- Better lazy.nvim style (lets lazy manage keys cleanly)
     keys = {
-      { "<leader>st", "<cmd>TodoTelescope<cr>", desc = "[S]earch [T]odos" },
-      { "<leader>sT", "<cmd>TodoQuickFix<cr>",  desc = "[S]end [T]odos to quickfix" },
+      { "<leader>st", "<cmd>TodoTelescope keywords=TODO,RESUME,COMPRESS,STUDY,FIX,FIXME,BUG,ISSUE,WARN,HACK,PERF<cr>", desc = "[S]earch [T]odos" },
+      { "<leader>sT", "<cmd>TodoQuickFix keywords=TODO,RESUME,COMPRESS,STUDY,FIX,FIXME,BUG,ISSUE,WARN,HACK,PERF<cr>",  desc = "[S]end [T]odos to quickfix" },
     },
   },
 }
