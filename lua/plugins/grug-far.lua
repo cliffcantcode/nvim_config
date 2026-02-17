@@ -4,7 +4,7 @@ return {
     cmd = { "GrugFar", "GrugFarWithin" },
     keys = {
       {
-        "<leader>sR",
+        "<leader>frn",
         function()
           require("grug-far").open({
             prefills = { search = vim.fn.expand("<cword>") },
@@ -13,7 +13,7 @@ return {
         desc = "[S]earch [R]eplace (grug-far, word)",
       },
       {
-        "<leader>sR",
+        "<leader>frn",
         function()
           require("grug-far").with_visual_selection()
         end,
