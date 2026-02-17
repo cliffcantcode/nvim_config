@@ -1,3 +1,5 @@
+-- TODO: In a switch statement add the , to the end of the switch block.
+-- TODO: In a switch statement add change the ; to a , if it's a single line.
 local M = {}
 
 --------------------------------------------------------------------------------
