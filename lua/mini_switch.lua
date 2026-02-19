@@ -58,7 +58,8 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
 
 local ft_defaults = {
   zig = { { "var", "const" },
-          { "init", "deinit" }, },
+          { "init", "deinit" },
+          { "and", "or" }, },
   cpp = { { ".", "->" },
           { "struct", "enum" }, },
   sql = { { "where", "and" },

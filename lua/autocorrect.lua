@@ -29,6 +29,13 @@ M.replacements = {
   ["nvmi"] = "nvim",
   ["alliged"] = "aligned",
   ["minimmized"] = "minimized",
+  ["OCCULUSION"] = "OCCLUSION",
+  ["occulusion"] = "occlusion",
+  ["CLOACKED"] = "CLOAKED",
+  ["cloacked"] = "cloaked",
+  ["Windwo"] = "Window",
+  ["windwo"] = "window",
+  ["MousE"] = "MouseE",
 }
 
 M.filetype_replacements = {
