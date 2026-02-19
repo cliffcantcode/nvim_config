@@ -53,13 +53,14 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "NORTH", "SOUTH" },
   { "EAST", "WEST" },
   { "pushed", "raised" },
-  { "pitch", "yaw", "roll" },
+  { "pitch", "roll", "yaw", },
 }
 
 local ft_defaults = {
   zig = { { "var", "const" },
           { "init", "deinit" },
-          { "and", "or" }, },
+          { "and", "or" },
+          { "update", "render" }, },
   cpp = { { ".", "->" },
           { "struct", "enum" }, },
   sql = { { "where", "and" },
