@@ -1,5 +1,26 @@
 -- TODO: In a switch statement add the , to the end of the switch block.
 -- TODO: In a switch statement add change the ; to a , if it's a single line.
+-- TODO: The formatter also adds ';' to the end of a struct if it is meant to be the return type of a function, it should not as that isn't valid syntax and won't compile. :
+--[[
+fn Win32CircularDeadzone(raw_x: f32, raw_y: f32, deadzone: f32) struct { x: f32, y: f32 }; {
+    var result = .{ .x = 0.0, .y = 0.0 };
+
+    const magnitude = @sqrt((raw_x * raw_x) + (raw_y * raw_y));
+    if (magnitude > deadzone) {
+        const clipped_magnitude = @min(magnitude, 1.0);
+        const scaled_magnitude = (clipped_magnitude - deadzone) / (1.0 - deadzone);
+
+        raw_x *= (scaled_magnitude / magnitude);
+        raw_y *= -(scaled_magnitude / magnitude);
+
+        result.stick_x = raw_x;
+        result.stick_y = raw_y;
+    }
+
+    return result;
+}
+]]--
+
 local M = {}
 
 --------------------------------------------------------------------------------
