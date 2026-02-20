@@ -1,31 +1,50 @@
--- TODO: In a switch statement add the , to the end of the switch block.
--- TODO: In a switch statement add change the ; to a , if it's a single line.
--- TODO: The formatter also adds ';' to the end of a struct if it is meant to be the return type of a function, it should not as that isn't valid syntax and won't compile. :
---[[
-fn Win32CircularDeadzone(raw_x: f32, raw_y: f32, deadzone: f32) struct { x: f32, y: f32 }; {
-    var result = .{ .x = 0.0, .y = 0.0 };
-
-    const magnitude = @sqrt((raw_x * raw_x) + (raw_y * raw_y));
-    if (magnitude > deadzone) {
-        const clipped_magnitude = @min(magnitude, 1.0);
-        const scaled_magnitude = (clipped_magnitude - deadzone) / (1.0 - deadzone);
-
-        raw_x *= (scaled_magnitude / magnitude);
-        raw_y *= -(scaled_magnitude / magnitude);
-
-        result.stick_x = raw_x;
-        result.stick_y = raw_y;
-    }
-
-    return result;
-}
-]]--
-
 local M = {}
 
 --------------------------------------------------------------------------------
 -- Zig semicolon fixer (Tree-sitter + conservative fallbacks)
 --------------------------------------------------------------------------------
+
+-- Only treat REAL container declarations as needing ';'
+-- Avoid structs used as function return types or type expressions.
+local container_kinds = {
+  struct_declaration = true,
+  union_declaration = true,
+  enum_declaration = true,
+  opaque_declaration = true,
+}
+
+local function is_real_container_declaration(node)
+  if not container_kinds[node:type()] then
+    return false
+  end
+
+  local parent = node:parent()
+  if not parent then
+    return false
+  end
+
+  local pk = parent:type()
+
+  -- Valid top-level / named container cases
+  if pk == "source_file"
+    or pk == "declaration"
+    or pk == "container_declaration"
+  then
+    return true
+  end
+
+  -- If we're inside a function declaration/type expression,
+  -- this is almost certainly a return-type struct.
+  if pk == "function_declaration"
+    or pk == "function_type"
+    or pk == "parameter_declaration"
+    or pk == "type_expression"
+  then
+    return false
+  end
+
+  return false
+end
 
 local function zig_fix_missing_semicolons(bufnr)
   local ok_ts, ts = pcall(require, "vim.treesitter")
@@ -269,11 +288,11 @@ local function zig_fix_missing_semicolons(bufnr)
     local kind = node:type()
 
     -- 1) container declarations (cheap, and sometimes useful)
-    if container_kinds[kind] then
+    if is_real_container_declaration(node) then
       local row, col = last_code_pos_in_node(node)
       if row and col then
         local line = get_line(row)
-        local last_ch = line:sub(col, col) -- col is len(prefix), 1-based index of last char
+        local last_ch = line:sub(col, col)
         if last_ch == "}" then
           add_insert(row, col)
         end
@@ -559,6 +578,66 @@ function M.run_tests()
     { "const already = true;" },
     { "const already = true;" }
   )
+
+  run_case(
+    "struct return type should not get semicolon",
+    {
+      "fn Win32CircularDeadzone(raw_x: f32, raw_y: f32, deadzone: f32) struct { x: f32, y: f32 } {",
+      "    return .{ .x = 0.0, .y = 0.0 };",
+      "}",
+    },
+    {
+      "fn Win32CircularDeadzone(raw_x: f32, raw_y: f32, deadzone: f32) struct { x: f32, y: f32 } {",
+      "    return .{ .x = 0.0, .y = 0.0 };",
+      "}",
+    }
+  )
+
+  -- TODO: In a switch statement add the , to the end of the switch block.
+  -- TODO: In a switch statement add change the ; to a , if it's a single line.
+  -- run_case(
+  --   "switch semicolon -> comma",
+  --   {
+  --     "switch (x) {",
+  --     "    .a => foo();",
+  --     "}",
+  --   },
+  --   {
+  --     "switch (x) {",
+  --     "    .a => foo(),",
+  --     "}",
+  --   }
+  -- )
+  -- run_case(
+  --   "switch missing comma",
+  --   {
+  --     "switch (x) {",
+  --     "    .a => foo()",
+  --     "}",
+  --   },
+  --   {
+  --     "switch (x) {",
+  --     "    .a => foo(),",
+  --     "}",
+  --   }
+  -- )
+  -- run_case(
+  --   "switch block prong untouched",
+  --   {
+  --     "switch (x) {",
+  --     "    .a => {",
+  --     "        foo();",
+  --     "    },",
+  --     "}",
+  --   },
+  --   {
+  --     "switch (x) {",
+  --     "    .a => {",
+  --     "        foo();",
+  --     "    },",
+  --     "}",
+  --   }
+  -- )
 end
 
 local _selftest_state = 0 -- 0 = not run, 1 = passed, -1 = failed
