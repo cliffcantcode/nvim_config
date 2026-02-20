@@ -36,6 +36,7 @@ M.replacements = {
   ["Windwo"] = "Window",
   ["windwo"] = "window",
   ["MousE"] = "MouseE",
+  ["deadxone"] = "deadzone",
 }
 
 M.filetype_replacements = {
