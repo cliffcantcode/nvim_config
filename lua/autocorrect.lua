@@ -50,6 +50,7 @@ M.filetype_replacements = {
     ["%f[%w]cont%f[%s]"] = "const",
     ["Ste%f[%W]"] = "Step",
     ["acces([^s])"] = "access%1",
+    ["pun fn "] = "pub fn ",
   },
   swift = {
     ["pointtee"] = "pointee",
