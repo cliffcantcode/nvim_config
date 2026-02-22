@@ -539,18 +539,18 @@ function M.run_tests()
 
   run_case(
     "trailing // comment",
-    { "const headless = false // TODO: Comment blocking end of const declaration." },
-    { "const headless = false; // TODO: Comment blocking end of const declaration." }
+    { "const headless = false // todo: Comment blocking end of const declaration." },
+    { "const headless = false; // todo: Comment blocking end of const declaration." }
   )
 
   run_case(
     "two adjacent const decls",
     {
-      "const headless = false // TODO: Comment blocking end of const declaration.",
+      "const headless = false // todo: Comment blocking end of const declaration.",
       "const y_started_near_center = @abs(ctrl.start_y) < 0.3",
     },
     {
-      "const headless = false; // TODO: Comment blocking end of const declaration.",
+      "const headless = false; // todo: Comment blocking end of const declaration.",
       "const y_started_near_center = @abs(ctrl.start_y) < 0.3;",
     }
   )
