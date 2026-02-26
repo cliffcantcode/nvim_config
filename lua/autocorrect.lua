@@ -37,6 +37,8 @@ M.replacements = {
   ["windwo"] = "window",
   ["MousE"] = "MouseE",
   ["deadxone"] = "deadzone",
+  ["retrun"] = "return",
+  ["hool_"] = "hook_",
 }
 
 M.filetype_replacements = {
