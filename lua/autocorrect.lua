@@ -39,6 +39,7 @@ M.replacements = {
   ["deadxone"] = "deadzone",
   ["retrun"] = "return",
   ["hool_"] = "hook_",
+  ["ytpe"] = "type",
 }
 
 M.filetype_replacements = {
