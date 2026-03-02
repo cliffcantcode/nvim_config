@@ -51,6 +51,7 @@ M.filetype_replacements = {
   },
   zig = {
     ["%f[%w]cont%f[%s]"] = "const",
+    ["counst"] = "const",
     ["Ste%f[%W]"] = "Step",
     ["acces([^s])"] = "access%1",
     ["pun fn "] = "pub fn ",
@@ -58,6 +59,9 @@ M.filetype_replacements = {
   swift = {
     ["pointtee"] = "pointee",
     ["Visisible"] = "Visible",
+  },
+  sql = {
+    ["wher "] = "where ",
   },
 }
 
