@@ -40,6 +40,7 @@ M.replacements = {
   ["retrun"] = "return",
   ["hool_"] = "hook_",
   ["ytpe"] = "type",
+  ["utr%-8"] = "utf-8",
 }
 
 M.filetype_replacements = {
@@ -224,6 +225,11 @@ function M.run_tests()
       ft = "any",
       mistaken = "self.tone_volumne = volume",
       expected = "self.tone_volume = volume",
+    },
+    {
+      ft = "any",
+      mistaken = "encoding: utr-8",
+      expected = "encoding: utf-8",
     },
   }
 
