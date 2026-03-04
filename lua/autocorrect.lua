@@ -41,6 +41,7 @@ M.replacements = {
   ["hool_"] = "hook_",
   ["ytpe"] = "type",
   ["magnitued"] = "magnitude",
+  ["utr%-8"] = "utf-8",
 }
 
 M.filetype_replacements = {
@@ -52,6 +53,7 @@ M.filetype_replacements = {
   },
   zig = {
     ["%f[%w]cont%f[%s]"] = "const",
+    ["counst"] = "const",
     ["Ste%f[%W]"] = "Step",
     ["acces([^s])"] = "access%1",
     ["pun fn "] = "pub fn ",
@@ -59,6 +61,9 @@ M.filetype_replacements = {
   swift = {
     ["pointtee"] = "pointee",
     ["Visisible"] = "Visible",
+  },
+  sql = {
+    ["wher "] = "where ",
   },
 }
 
@@ -221,6 +226,11 @@ function M.run_tests()
       ft = "any",
       mistaken = "self.tone_volumne = volume",
       expected = "self.tone_volume = volume",
+    },
+    {
+      ft = "any",
+      mistaken = "encoding: utr-8",
+      expected = "encoding: utf-8",
     },
   }
 
