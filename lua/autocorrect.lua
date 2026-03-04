@@ -40,6 +40,7 @@ M.replacements = {
   ["retrun"] = "return",
   ["hool_"] = "hook_",
   ["ytpe"] = "type",
+  ["magnitued"] = "magnitude",
 }
 
 M.filetype_replacements = {
