@@ -33,7 +33,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "up", "down" },
   { "Old", "New" },
   { "old", "new" },
-  { "next", "prev" },
+  { "curr", "next", "prev" },
   { "in", "out" },
   { "A", "B", "C" },
   { "R,",  "G,",  "B,",  "A," },

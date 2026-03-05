@@ -42,6 +42,7 @@ M.replacements = {
   ["ytpe"] = "type",
   ["magnitued"] = "magnitude",
   ["utr%-8"] = "utf-8",
+  ["remaineder"] = "remainder",
 }
 
 M.filetype_replacements = {
