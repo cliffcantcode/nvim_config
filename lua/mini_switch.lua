@@ -65,9 +65,11 @@ local ft_defaults = {
           { "update", "render" }, },
   cpp = { { ".", "->" },
           { "struct", "enum" }, },
+  python = { {"aarch64", "x86_64" } },
   sql = { { "where", "and" },
           { "inner", "left", "right"},
-          { "group", "order"}, },
+          { "group", "order"},
+          {"aarch64", "x86_64" } },
   swift = { { "let", "var" },
             { "insert", "remove" }, },
 }
