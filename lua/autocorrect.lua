@@ -43,6 +43,7 @@ M.replacements = {
   ["magnitued"] = "magnitude",
   ["utr%-8"] = "utf-8",
   ["remaineder"] = "remainder",
+  ["advnace"] = "advance",
 }
 
 M.filetype_replacements = {

@@ -62,6 +62,7 @@ local ft_defaults = {
   zig = { { "var", "const" },
           { "init", "deinit" },
           { "and", "or" },
+          { "return", "continue" },
           { "update", "render" }, },
   cpp = { { ".", "->" },
           { "struct", "enum" }, },
