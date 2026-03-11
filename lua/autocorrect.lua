@@ -44,6 +44,9 @@ M.replacements = {
   ["utr%-8"] = "utf-8",
   ["remaineder"] = "remainder",
   ["advnace"] = "advance",
+  ["Davice"] = "Device",
+  ["INVALIDE_"] = "INVALID_",
+  ["hanlde"] = "handle",
 }
 
 M.filetype_replacements = {
@@ -66,6 +69,18 @@ M.filetype_replacements = {
   },
   sql = {
     ["wher "] = "where ",
+  },
+  markdown = {
+    ["safesty"] = "safest",
+    ["truely"] = "truly",
+    ["responce"] = "response",
+    ["regarless"] = "regardless",
+    ["disposible"] = "disposable",
+    ["thier"] = "their",
+    ["inparticular"] = "in particular",
+    ["meantion"] = "mention",
+    ["comunicate"] = "communicate",
+    ["secnario"] = "scenario",
   },
 }
 
