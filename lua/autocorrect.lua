@@ -70,6 +70,18 @@ M.filetype_replacements = {
   sql = {
     ["wher "] = "where ",
   },
+  markdown = {
+    ["safesty"] = "safest",
+    ["truely"] = "truly",
+    ["responce"] = "response",
+    ["regarless"] = "regardless",
+    ["disposible"] = "disposable",
+    ["thier"] = "their",
+    ["inparticular"] = "in particular",
+    ["meantion"] = "mention",
+    ["comunicate"] = "communicate",
+    ["secnario"] = "scenario",
+  },
 }
 
 M.excluded_files = {
