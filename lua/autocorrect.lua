@@ -44,6 +44,9 @@ M.replacements = {
   ["utr%-8"] = "utf-8",
   ["remaineder"] = "remainder",
   ["advnace"] = "advance",
+  ["Davice"] = "Device",
+  ["INVALIDE_"] = "INVALID_",
+  ["hanlde"] = "handle",
 }
 
 M.filetype_replacements = {
