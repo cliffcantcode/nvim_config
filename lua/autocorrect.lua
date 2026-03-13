@@ -62,6 +62,7 @@ M.filetype_replacements = {
     ["Ste%f[%W]"] = "Step",
     ["acces([^s])"] = "access%1",
     ["pun fn "] = "pub fn ",
+    ["@scr%(%)"] = "@src()",
   },
   swift = {
     ["pointtee"] = "pointee",
