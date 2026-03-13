@@ -76,5 +76,7 @@ vim.opt.fileencoding = "utf-8"
 -- Make jump list behave like a stack to prevent a build up of weird jumps.
 vim.opt.jumpoptions = "stack"
 
+-- Enables 24-bit RGB color in the terminal
+vim.opt.termguicolors = true
 -- vim: ts=2 sts=2 sw=2 et
 
