@@ -47,6 +47,7 @@ M.replacements = {
   ["Davice"] = "Device",
   ["INVALIDE_"] = "INVALID_",
   ["hanlde"] = "handle",
+  ["artifcats"] = "artifacts"
 }
 
 M.filetype_replacements = {
