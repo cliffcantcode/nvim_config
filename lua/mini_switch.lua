@@ -58,6 +58,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "identify", "validate" },
   { "first", "second", "third", },
   { "hot", "active" },
+  { "before", "after" },
 }
 
 local ft_defaults = {
@@ -68,9 +69,11 @@ local ft_defaults = {
           { "update", "render" }, },
   cpp = { { ".", "->" },
           { "struct", "enum" }, },
+  python = { {"aarch64", "x86_64" } },
   sql = { { "where", "and" },
           { "inner", "left", "right"},
-          { "group", "order"}, },
+          { "group", "order"},
+          {"aarch64", "x86_64" } },
   swift = { { "let", "var" },
             { "insert", "remove" }, },
 }
