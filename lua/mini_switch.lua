@@ -44,7 +44,8 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "u64", "i64", "f64" },
   { "on", "off" },
   { "'", '"' },
-  { "initial", "desired", "current" },
+  { "initial", "desired" },
+  { "current", "previous" },
   { "get", "set" },
   { "north", "south" },
   { "east", "west" },
@@ -56,6 +57,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "pitch", "roll", "yaw", },
   { "identify", "validate" },
   { "first", "second", "third", },
+  { "hot", "active" },
 }
 
 local ft_defaults = {

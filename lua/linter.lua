@@ -1,5 +1,21 @@
 local M = {}
 
+local function has_min_or_max(s)
+  return s and (s:match("[Mm]in") or s:match("[Mm]ax"))
+end
+
+local function is_balanced_min_max(line)
+  -- Split around first comparison operator
+  local lhs, op, rhs = line:match("^(.-)%s*([<>]=?)%s*(.-)$")
+  if not lhs then return false end
+
+  local lhs_has = has_min_or_max(lhs)
+  local rhs_has = has_min_or_max(rhs)
+
+  -- If BOTH sides reference min/max → ignore
+  return lhs_has and rhs_has
+end
+
 -- Add patterns for common mistakes
 M.patterns = {
   { regex = ">%s*[%w_%.]*[Mm]ax[_%w]*",  message = "'>' points away from the Max. |=> " },
@@ -123,6 +139,11 @@ local function lint_lines(lines, full_path, filetype)
     then
       for _, p in ipairs(M.patterns) do
         if string.find(line, p.regex) then
+          -- Skip cases like: min < x < max OR comparisons involving both sides
+          if is_balanced_min_max(line) then
+            goto continue
+          end
+
           table.insert(results, {
             filename = full_path,
             lnum = i,
@@ -131,6 +152,7 @@ local function lint_lines(lines, full_path, filetype)
             type = "W",
           })
         end
+        ::continue::
       end
     end
   end
