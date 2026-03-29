@@ -66,6 +66,7 @@ local ft_defaults = {
           { "init", "deinit" },
           { "and", "or" },
           { "return", "continue" },
+          { "src", "dst" },
           { "update", "render" }, },
   cpp = { { ".", "->" },
           { "struct", "enum" }, },
