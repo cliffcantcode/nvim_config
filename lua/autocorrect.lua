@@ -18,6 +18,7 @@ M.replacements = {
   ["Aloc"] = "Alloc",
   ["Dispaly"] = "Display",
   ["gaurd"] = "guard",
+  ["Gaurd"] = "Guard",
   ["amound"] = "amount",
   ["unsinged"] = "unsigned",
   ["Pinter"] = "Pointer",
