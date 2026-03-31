@@ -51,6 +51,7 @@ M.replacements = {
   ["artifcats"] = "artifacts",
   ["widht"] = "width",
   ["displaz"] = "display",
+  ["nuetral"] = "neutral",
 }
 
 M.filetype_replacements = {
@@ -67,6 +68,7 @@ M.filetype_replacements = {
     ["acces([^s])"] = "access%1",
     ["pun fn "] = "pub fn ",
     ["@scr%(%)"] = "@src()",
+    ["scr_"] = "src_",
   },
   swift = {
     ["pointtee"] = "pointee",
