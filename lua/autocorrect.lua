@@ -60,6 +60,7 @@ M.filetype_replacements = {
   },
   cpp = {
     ["Hight"] = "High",
+    ["strcut"] = "struct",
   },
   zig = {
     ["%f[%w]cont%f[%s]"] = "const",
@@ -69,6 +70,7 @@ M.filetype_replacements = {
     ["pun fn "] = "pub fn ",
     ["@scr%(%)"] = "@src()",
     ["scr_"] = "src_",
+    ["strcut"] = "struct",
   },
   swift = {
     ["pointtee"] = "pointee",
