@@ -52,6 +52,8 @@ M.replacements = {
   ["widht"] = "width",
   ["displaz"] = "display",
   ["nuetral"] = "neutral",
+  ["tomosyntesis"] = "tomosynthesis",
+  ["diagnositc"] = "diagnostic",
 }
 
 M.filetype_replacements = {
