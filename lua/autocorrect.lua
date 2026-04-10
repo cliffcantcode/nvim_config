@@ -52,6 +52,7 @@ M.replacements = {
   ["widht"] = "width",
   ["displaz"] = "display",
   ["nuetral"] = "neutral",
+  ["bitmaks"] = "bitmask",
 }
 
 M.filetype_replacements = {

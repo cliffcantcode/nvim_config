@@ -59,6 +59,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "first", "second", "third", },
   { "hot", "active" },
   { "before", "after" },
+  { "sin", "cos" },
 }
 
 local ft_defaults = {
