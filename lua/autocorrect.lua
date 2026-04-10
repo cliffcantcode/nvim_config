@@ -53,6 +53,8 @@ M.replacements = {
   ["displaz"] = "display",
   ["nuetral"] = "neutral",
   ["bitmaks"] = "bitmask",
+  ["tomosyntesis"] = "tomosynthesis",
+  ["diagnositc"] = "diagnostic",
 }
 
 M.filetype_replacements = {
