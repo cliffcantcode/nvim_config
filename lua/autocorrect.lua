@@ -55,6 +55,7 @@ M.replacements = {
   ["bitmaks"] = "bitmask",
   ["tomosyntesis"] = "tomosynthesis",
   ["diagnositc"] = "diagnostic",
+  ["indicies"] = "indices",
 }
 
 M.filetype_replacements = {
