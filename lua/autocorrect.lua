@@ -56,6 +56,8 @@ M.replacements = {
   ["tomosyntesis"] = "tomosynthesis",
   ["diagnositc"] = "diagnostic",
   ["indicies"] = "indices",
+  ["extesion"] = "extension",
+  ["Destory"] = "Destroy",
 }
 
 M.filetype_replacements = {
@@ -75,6 +77,7 @@ M.filetype_replacements = {
     ["@scr%(%)"] = "@src()",
     ["scr_"] = "src_",
     ["strcut"] = "struct",
+    ["impoart"] = "import",
   },
   swift = {
     ["pointtee"] = "pointee",
