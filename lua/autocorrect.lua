@@ -58,6 +58,13 @@ M.replacements = {
   ["indicies"] = "indices",
   ["extesion"] = "extension",
   ["Destory"] = "Destroy",
+  ["destory"] = "destroy",
+  ["desctroy"] = "destroy",
+  ["Physcial"] = "Physical",
+  ["Phystical"] = "Physical",
+  ["buffes"] = "buffers",
+  ["Cahce"] = "Cache",
+  ["IMage"] = "Image",
 }
 
 M.filetype_replacements = {
