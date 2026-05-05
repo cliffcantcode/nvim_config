@@ -83,8 +83,13 @@ M.filetype_replacements = {
     ["pointtee"] = "pointee",
     ["Visisible"] = "Visible",
   },
+  python = {
+    ["inenumerate"] = "in enumerate",
+  },
   sql = {
+    -- Some python items are duplicated for nested calls in sql.
     ["wher "] = "where ",
+    ["inenumerate"] = "in enumerate",
   },
   markdown = {
     ["safesty"] = "safest",
