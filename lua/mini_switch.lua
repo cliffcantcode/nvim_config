@@ -60,6 +60,8 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "hot", "active" },
   { "before", "after" },
   { "sin", "cos" },
+  { "positive", "negative" },
+  { "Positive", "Negative" },
 }
 
 local ft_defaults = {
