@@ -14,6 +14,8 @@ M.cycles = {
   { "_x", "_y", "_z" },
   { "x_", "y_", "z_" },
   { "dx", "dy", "dz" },
+
+  { "credit", "debit" },
 }
 
 local forward_cycle_map = {}
