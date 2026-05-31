@@ -65,6 +65,7 @@ M.replacements = {
   ["buffes"] = "buffers",
   ["Cahce"] = "Cache",
   ["IMage"] = "Image",
+  ["Vallue"] = "Value",
 }
 
 M.filetype_replacements = {

@@ -60,6 +60,9 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "hot", "active" },
   { "before", "after" },
   { "sin", "cos" },
+  { "credit", "debit" },
+  { "read", "write" },
+  { "reader", "writer" },
 }
 
 local ft_defaults = {
@@ -68,6 +71,7 @@ local ft_defaults = {
           { "and", "or" },
           { "return", "continue" },
           { "src", "dst" },
+          { "Reader", "Writer" },
           { "update", "render" }, },
   cpp = { { ".", "->" },
           { "struct", "enum" }, },
