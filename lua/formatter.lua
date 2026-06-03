@@ -592,52 +592,6 @@ function M.run_tests()
       "}",
     }
   )
-
-  -- TODO: In a switch statement add the , to the end of the switch block.
-  -- TODO: In a switch statement add change the ; to a , if it's a single line.
-  -- run_case(
-  --   "switch semicolon -> comma",
-  --   {
-  --     "switch (x) {",
-  --     "    .a => foo();",
-  --     "}",
-  --   },
-  --   {
-  --     "switch (x) {",
-  --     "    .a => foo(),",
-  --     "}",
-  --   }
-  -- )
-  -- run_case(
-  --   "switch missing comma",
-  --   {
-  --     "switch (x) {",
-  --     "    .a => foo()",
-  --     "}",
-  --   },
-  --   {
-  --     "switch (x) {",
-  --     "    .a => foo(),",
-  --     "}",
-  --   }
-  -- )
-  -- run_case(
-  --   "switch block prong untouched",
-  --   {
-  --     "switch (x) {",
-  --     "    .a => {",
-  --     "        foo();",
-  --     "    },",
-  --     "}",
-  --   },
-  --   {
-  --     "switch (x) {",
-  --     "    .a => {",
-  --     "        foo();",
-  --     "    },",
-  --     "}",
-  --   }
-  -- )
 end
 
 local _selftest_state = 0 -- 0 = not run, 1 = passed, -1 = failed
@@ -698,6 +652,114 @@ M.formatters = {
   zig = "zig fmt --stdin",
 }
 
+local function snapshot_local_letter_marks(buf)
+  local marks = {}
+
+  for byte = string.byte("a"), string.byte("z") do
+    local mark = string.char(byte)
+    local pos = vim.api.nvim_buf_get_mark(buf, mark)
+
+    if pos[1] > 0 then
+      local text = vim.api.nvim_buf_get_lines(buf, pos[1] - 1, pos[1], false)[1] or ""
+      marks[mark] = {
+        line = pos[1],
+        col = pos[2],
+        text = text,
+        indent = #(text:match("^%s*") or ""),
+      }
+    end
+  end
+
+  return marks
+end
+
+local function trim_line(line)
+  return (line or ""):match("^%s*(.-)%s*$")
+end
+
+local function map_marks_through_line_diff(old_lines, new_lines, marks)
+  local mapped = {}
+
+  local old_text = table.concat(old_lines, "\n")
+  local new_text = table.concat(new_lines, "\n")
+  local hunks = vim.diff(old_text, new_text, {
+    result_type = "indices",
+  }) or {}
+
+  local function map_unchanged_range(old_start, old_end, new_start)
+    if old_start > old_end then return end
+
+    for mark, pos in pairs(marks) do
+      if not mapped[mark] and pos.line >= old_start and pos.line <= old_end then
+        mapped[mark] = vim.tbl_extend("force", pos, {
+          line = new_start + (pos.line - old_start),
+        })
+      end
+    end
+  end
+
+  local function map_changed_hunk(old_start, old_count, new_start, new_count)
+    if old_count <= 0 or new_count <= 0 then return end
+
+    local old_end = old_start + old_count - 1
+    local new_counts = {}
+    local new_line_by_trimmed = {}
+
+    for i = 0, new_count - 1 do
+      local new_line_nr = new_start + i
+      local key = trim_line(new_lines[new_line_nr])
+      if key ~= "" then
+        new_counts[key] = (new_counts[key] or 0) + 1
+        new_line_by_trimmed[key] = new_line_nr
+      end
+    end
+
+    for mark, pos in pairs(marks) do
+      if not mapped[mark] and pos.line >= old_start and pos.line <= old_end then
+        local key = trim_line(pos.text)
+        if key ~= "" and new_counts[key] == 1 then
+          mapped[mark] = vim.tbl_extend("force", pos, {
+            line = new_line_by_trimmed[key],
+          })
+        end
+      end
+    end
+  end
+
+  local old_cursor = 1
+  local new_cursor = 1
+
+  for _, hunk in ipairs(hunks) do
+    local old_start, old_count, new_start, new_count = hunk[1], hunk[2], hunk[3], hunk[4]
+
+    map_unchanged_range(old_cursor, old_start - 1, new_cursor)
+    map_changed_hunk(old_start, old_count, new_start, new_count)
+
+    old_cursor = old_start + old_count
+    new_cursor = new_start + new_count
+  end
+
+  map_unchanged_range(old_cursor, #old_lines, new_cursor)
+
+  return mapped
+end
+
+local function restore_local_letter_marks(buf, marks)
+  local line_count = vim.api.nvim_buf_line_count(buf)
+
+  for mark, pos in pairs(marks) do
+    if pos.line <= line_count then
+      local line = vim.api.nvim_buf_get_lines(buf, pos.line - 1, pos.line, false)[1] or
+      ""
+      local new_indent = #(line:match("^%s*") or "")
+      local old_indent = pos.indent or 0
+      local col = math.min(new_indent + math.max(0, pos.col - old_indent), #line)
+
+      pcall(vim.api.nvim_buf_set_mark, buf, mark, pos.line, col, {})
+    end
+  end
+end
+
 local function format_buffer(cmd, bufnr)
   local buf = bufnr or vim.api.nvim_get_current_buf()
   local view = vim.fn.winsaveview()
@@ -718,8 +780,12 @@ local function format_buffer(cmd, bufnr)
     return
   end
 
-  local new_lines = vim.split(formatted, "\n", { trimempty = false })
+  local marks = snapshot_local_letter_marks(buf)
+  local new_lines = vim.split(formatted, "\n", {trimempty = false})
+  local mapped_marks = map_marks_through_line_diff(old_lines, new_lines, marks)
+
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, new_lines)
+  restore_local_letter_marks(buf, mapped_marks)
 
   vim.fn.winrestview(view)
 end

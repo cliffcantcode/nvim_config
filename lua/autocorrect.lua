@@ -66,6 +66,9 @@ M.replacements = {
   ["Cahce"] = "Cache",
   ["IMage"] = "Image",
   ["Pasrsing"] = "Parsing",
+  ["progesteron_"] = "progesterone_",
+  ["attatched"] = "attached",
+  ["equivical"] = "equivocal",
 }
 
 M.filetype_replacements = {
