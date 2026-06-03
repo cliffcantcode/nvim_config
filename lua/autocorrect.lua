@@ -69,6 +69,7 @@ M.replacements = {
   ["progesteron_"] = "progesterone_",
   ["attatched"] = "attached",
   ["equivical"] = "equivocal",
+  ["Vallue"] = "Value",
 }
 
 M.filetype_replacements = {
