@@ -88,6 +88,195 @@ local ft_defaults = {
 
 local buf_state = setmetatable({}, { __mode = "k" })
 
+local function strip_zig_line_comment(line)
+  local in_str, in_char, esc = false, false, false
+  local i = 1
+
+  while i <= #line - 1 do
+    local ch = line:sub(i, i)
+    local nxt = line:sub(i + 1, i + 1)
+
+    if in_str or in_char then
+      if esc then
+        esc = false
+      elseif ch == "\\" then
+        esc = true
+      elseif in_str and ch == "\"" then
+        in_str = false
+      elseif in_char and ch == "'" then
+        in_char = false
+      end
+    else
+      if ch == "\"" then
+        in_str = true
+      elseif ch == "'" then
+        in_char = true
+      elseif ch == "/" and nxt == "/" then
+        return line:sub(1, i - 1)
+      end
+    end
+
+    i = i + 1
+  end
+
+  return line
+end
+
+local function zig_enum_candidates_from_buffer(bufnr, enum_name)
+  if not enum_name or enum_name == "" then return nil end
+
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local start_line
+
+  for i, line in ipairs(lines) do
+    local code = strip_zig_line_comment(line)
+    if code:match("%f[%w_]" .. enum_name .. "%f[^%w_]%s*=%s*enum%s*%b()%s*{")
+      or code:match("%f[%w_]" .. enum_name .. "%f[^%w_]%s*=%s*enum%s*{") then
+      start_line = i
+      break
+    end
+  end
+
+  if not start_line then return nil end
+
+  local candidates, seen = {}, {}
+  local depth = 0
+
+  for i = start_line, #lines do
+    local code = strip_zig_line_comment(lines[i])
+    local scan_start = 1
+
+    if i == start_line then
+      local brace = code:find("{", 1, true)
+      if not brace then return nil end
+      scan_start = brace + 1
+    end
+
+    local chunk = code:sub(scan_start)
+    local field_start = 1
+
+    for j = 1, #chunk do
+      local ch = chunk:sub(j, j)
+      if ch == "{" then
+        depth = depth + 1
+      elseif ch == "}" then
+        if depth == 0 then
+          local field = chunk:sub(field_start, j - 1)
+            :gsub("=.*$", "")
+            :match("^%s*([A-Za-z_][A-Za-z0-9_]*)")
+          if field and not seen[field] then
+            seen[field] = true
+            table.insert(candidates, field)
+          end
+          return #candidates >= 2 and candidates or nil
+        end
+        depth = depth - 1
+      elseif ch == "," and depth == 0 then
+        local field = chunk:sub(field_start, j - 1)
+          :gsub("=.*$", "")
+          :match("^%s*([A-Za-z_][A-Za-z0-9_]*)")
+        if field and not seen[field] then
+          seen[field] = true
+          table.insert(candidates, field)
+        end
+        field_start = j + 1
+      end
+    end
+  end
+
+  return #candidates >= 2 and candidates or nil
+end
+
+local function zig_lines_from_uri(uri, current_bufnr)
+  if not uri then return nil end
+
+  local current_name = vim.api.nvim_buf_get_name(current_bufnr)
+  local current_uri = current_name ~= "" and vim.uri_from_fname(current_name) or nil
+  if current_uri == uri then
+    return vim.api.nvim_buf_get_lines(current_bufnr, 0, -1, false)
+  end
+
+  local ok_fname, fname = pcall(vim.uri_to_fname, uri)
+  if not ok_fname or not fname or fname == "" then return nil end
+
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(buf)
+      and vim.api.nvim_buf_get_name(buf) == fname then
+      return vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+    end
+  end
+
+  local ok_read, lines = pcall(vim.fn.readfile, fname)
+  if ok_read and type(lines) == "table" then
+    return lines
+  end
+
+  return nil
+end
+
+local function zig_enum_candidates_around_line(lines, target_line)
+  if not lines or not target_line then return nil end
+
+  local function collect_from(start_line, start_col)
+    local candidates, seen = {}, {}
+    local depth = 0
+
+    for i = start_line, #lines do
+      local code = strip_zig_line_comment(lines[i])
+      local scan_start = (i == start_line) and (start_col + 1) or 1
+      local chunk = code:sub(scan_start)
+      local field_start = 1
+
+      for j = 1, #chunk do
+        local ch = chunk:sub(j, j)
+        if ch == "{" then
+          depth = depth + 1
+        elseif ch == "}" then
+          if depth == 0 then
+            local field = chunk:sub(field_start, j - 1)
+              :gsub("=.*$", "")
+              :match("^%s*([A-Za-z_][A-Za-z0-9_]*)")
+            if field and not seen[field] then
+              seen[field] = true
+              table.insert(candidates, field)
+            end
+            return i, (#candidates >= 2 and candidates or nil)
+          end
+          depth = depth - 1
+        elseif ch == "," and depth == 0 then
+          local field = chunk:sub(field_start, j - 1)
+            :gsub("=.*$", "")
+            :match("^%s*([A-Za-z_][A-Za-z0-9_]*)")
+          if field and not seen[field] then
+            seen[field] = true
+            table.insert(candidates, field)
+          end
+          field_start = j + 1
+        end
+      end
+    end
+
+    return nil, nil
+  end
+
+  for i, line in ipairs(lines) do
+    local code = strip_zig_line_comment(line)
+    local enum_start, brace = code:find("enum%s*%b()%s*{")
+    if not brace then
+      enum_start, brace = code:find("enum%s*{")
+    end
+
+    if enum_start and brace then
+      local end_line, candidates = collect_from(i, brace)
+      if candidates and target_line >= i and target_line <= end_line then
+        return candidates
+      end
+    end
+  end
+
+  return nil
+end
+
 local function try_cycle_zig_enum(bufnr, row, l, r, word)
   if vim.bo[bufnr].filetype ~= "zig" then return false end
 
@@ -151,9 +340,45 @@ local function try_cycle_zig_enum(bufnr, row, l, r, word)
     return vim.lsp.buf_request_sync(bufnr, "textDocument/completion", params, 800)
   end
 
+  local function request_location(method, bytecol0)
+    local params = vim.lsp.util.make_position_params(0, encoding)
+    params.textDocument = { uri = vim.uri_from_bufnr(bufnr) }
+    params.position = {
+      line = row - 1,
+      character = byte_to_lsp_char(bytecol0),
+    }
+    return vim.lsp.buf_request_sync(bufnr, method, params, 800)
+  end
+
+  local function location_candidates(method, bytecol0)
+    local responses = request_location(method, bytecol0)
+
+    for _, resp in pairs(responses or {}) do
+      local result = resp and resp.result
+      if result and result.uri then result = { result } end
+      if result and result.targetUri then result = { result } end
+
+      for _, loc in ipairs(type(result) == "table" and result or {}) do
+        local uri = loc.targetUri or loc.uri
+        local range = loc.targetSelectionRange or loc.targetRange or loc.range
+        local line = range and range.start and range.start.line
+        if uri and line then
+          local lines = zig_lines_from_uri(uri, bufnr)
+          local found = zig_enum_candidates_around_line(lines, line + 1)
+          if found then return found end
+        end
+      end
+    end
+
+    return nil
+  end
+
   local EnumMemberKind = vim.lsp.protocol
     and vim.lsp.protocol.CompletionItemKind
     and vim.lsp.protocol.CompletionItemKind.EnumMember
+  local FieldKind = vim.lsp.protocol
+    and vim.lsp.protocol.CompletionItemKind
+    and vim.lsp.protocol.CompletionItemKind.Field
 
   local function extract_ident(raw)
     if type(raw) ~= "string" then return nil end
@@ -180,6 +405,7 @@ local function try_cycle_zig_enum(bufnr, row, l, r, word)
           local ok_candidate = false
           if type(raw) == "string" and raw:match("^%.") then ok_candidate = true end
           if EnumMemberKind and item.kind == EnumMemberKind then ok_candidate = true end
+          if FieldKind and item.kind == FieldKind then ok_candidate = true end
 
           if ok_candidate then
             local ident = extract_ident(raw)
@@ -205,18 +431,37 @@ local function try_cycle_zig_enum(bufnr, row, l, r, word)
     { cursor_byte0, false },
   }
 
+  local function has_current_tag(list)
+    for _, v in ipairs(list or {}) do
+      if v == tag or v:lower() == tag:lower() then
+        return true
+      end
+    end
+    return false
+  end
+
   local candidates
   for _, a in ipairs(attempts) do
     candidates = collect_candidates(request_completion(a[1], a[2]))
     if #candidates >= 2 then
-      local has = false
-      for _, v in ipairs(candidates) do
-        if v == tag or v:lower() == tag:lower() then
-          has = true
-          break
-        end
-      end
-      if has then break end
+      if has_current_tag(candidates) then break end
+    end
+  end
+
+  local explicit_enum = word:sub(1, dot_index - 1):match("([A-Za-z_][A-Za-z0-9_]*)$")
+  if explicit_enum then
+    local buffer_candidates = zig_enum_candidates_from_buffer(bufnr, explicit_enum)
+    if has_current_tag(buffer_candidates) then
+      candidates = buffer_candidates
+    end
+  end
+
+  if not candidates or #candidates < 2 or not has_current_tag(candidates) then
+    for _, bytecol0 in ipairs({ start_byte0 + dot_index, end_byte0, cursor_byte0 }) do
+      candidates = location_candidates("textDocument/definition", bytecol0)
+      if has_current_tag(candidates) then break end
+      candidates = location_candidates("textDocument/typeDefinition", bytecol0)
+      if has_current_tag(candidates) then break end
     end
   end
 
@@ -538,4 +783,5 @@ vim.api.nvim_create_autocmd({ "BufEnter", "FileType" }, {
 })
 
 return M
+
 
