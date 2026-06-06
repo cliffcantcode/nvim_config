@@ -179,7 +179,7 @@ local function apply_rules_to_line(line, rules)
   return line
 end
 
--- Apply replacements using nvim_buf_set_text
+-- Apply replacements without polluting the changelist used by g; / g,.
 local function autocorrect_buffer(bufnr, rules)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
@@ -187,13 +187,11 @@ local function autocorrect_buffer(bufnr, rules)
     if orig_line and orig_line ~= "" then
       local fixed = apply_rules_to_line(orig_line, rules)
       if fixed ~= orig_line then
-        vim.api.nvim_buf_set_lines(
-          bufnr,
-          i - 1,
-          i,
-          false,
-          { fixed }
-        )
+        vim.api.nvim_buf_call(bufnr, function()
+          vim.b._autocorrect_line = fixed
+          vim.cmd(("silent keepjumps lockmarks call setline(%d, b:_autocorrect_line)"):format(i))
+          vim.b._autocorrect_line = nil
+        end)
       end
     end
   end

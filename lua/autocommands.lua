@@ -99,7 +99,9 @@ vim.api.nvim_create_autocmd("BufWritePre", {
       if line_count > 0 then
         local last_line = vim.api.nvim_buf_get_lines(bufnr, line_count - 1, line_count, false)[1]
         if last_line ~= "" then
-          vim.api.nvim_buf_set_lines(bufnr, line_count, line_count, false, { "" })
+          vim.api.nvim_buf_call(bufnr, function()
+            vim.cmd(("silent keepjumps lockmarks call append(%d, '')"):format(line_count))
+          end)
         end
       end
     end

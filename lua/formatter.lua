@@ -419,7 +419,12 @@ local function zig_fix_missing_semicolons(bufnr)
   local changed = false
   for _, pos in ipairs(inserts) do
     if needs_semicolon(pos.row, pos.col) then
-      vim.api.nvim_buf_set_text(bufnr, pos.row, pos.col, pos.row, pos.col, { ";" })
+      local line = get_line(pos.row)
+      vim.api.nvim_buf_call(bufnr, function()
+        vim.b._formatter_line = line:sub(1, pos.col) .. ";" .. line:sub(pos.col + 1)
+        vim.cmd(("silent keepjumps lockmarks call setline(%d, b:_formatter_line)"):format(pos.row + 1))
+        vim.b._formatter_line = nil
+      end)
       changed = true
     end
   end
@@ -489,9 +494,11 @@ local function c_like_container_semicolon_fix(bufnr, ft)
   end
 
   -- Append semicolon at end of last line
-  vim.api.nvim_buf_set_lines(bufnr, end_line, end_line + 1, false, {
-    text .. ";",
-  })
+  vim.api.nvim_buf_call(bufnr, function()
+    vim.b._formatter_line = text .. ";"
+    vim.cmd(("silent keepjumps lockmarks call setline(%d, b:_formatter_line)"):format(end_line + 1))
+    vim.b._formatter_line = nil
+  end)
 
   return true
 end
@@ -749,8 +756,7 @@ local function restore_local_letter_marks(buf, marks)
 
   for mark, pos in pairs(marks) do
     if pos.line <= line_count then
-      local line = vim.api.nvim_buf_get_lines(buf, pos.line - 1, pos.line, false)[1] or
-      ""
+      local line = vim.api.nvim_buf_get_lines(buf, pos.line - 1, pos.line, false)[1] or ""
       local new_indent = #(line:match("^%s*") or "")
       local old_indent = pos.indent or 0
       local col = math.min(new_indent + math.max(0, pos.col - old_indent), #line)
@@ -758,6 +764,21 @@ local function restore_local_letter_marks(buf, marks)
       pcall(vim.api.nvim_buf_set_mark, buf, mark, pos.line, col, {})
     end
   end
+end
+
+local function set_buffer_lines_keepjumps(buf, lines)
+  local old_count = vim.api.nvim_buf_line_count(buf)
+  local new_count = #lines
+
+  vim.api.nvim_buf_call(buf, function()
+    vim.b._formatter_new_lines = lines
+    vim.cmd("silent keepjumps lockmarks call setline(1, b:_formatter_new_lines)")
+    vim.b._formatter_new_lines = nil
+
+    if new_count < old_count then
+      vim.cmd(("silent keepjumps lockmarks %d,%ddelete _"):format(new_count + 1, old_count))
+    end
+  end)
 end
 
 local function format_buffer(cmd, bufnr)
@@ -784,7 +805,7 @@ local function format_buffer(cmd, bufnr)
   local new_lines = vim.split(formatted, "\n", {trimempty = false})
   local mapped_marks = map_marks_through_line_diff(old_lines, new_lines, marks)
 
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, new_lines)
+  set_buffer_lines_keepjumps(buf, new_lines)
   restore_local_letter_marks(buf, mapped_marks)
 
   vim.fn.winrestview(view)
@@ -803,4 +824,3 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 })
 
 return M
-
