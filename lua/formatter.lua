@@ -684,14 +684,16 @@ local function trim_line(line)
   return (line or ""):match("^%s*(.-)%s*$")
 end
 
-local function map_marks_through_line_diff(old_lines, new_lines, marks)
-  local mapped = {}
-
+local function line_diff_hunks(old_lines, new_lines)
   local old_text = table.concat(old_lines, "\n")
   local new_text = table.concat(new_lines, "\n")
-  local hunks = vim.diff(old_text, new_text, {
+  return vim.diff(old_text, new_text, {
     result_type = "indices",
   }) or {}
+end
+
+local function map_marks_through_line_diff(old_lines, new_lines, marks, hunks)
+  local mapped = {}
 
   local function map_unchanged_range(old_start, old_end, new_start)
     if old_start > old_end then return end
@@ -766,17 +768,27 @@ local function restore_local_letter_marks(buf, marks)
   end
 end
 
-local function set_buffer_lines_keepjumps(buf, lines)
-  local old_count = vim.api.nvim_buf_line_count(buf)
-  local new_count = #lines
-
+local function apply_line_diff_keepjumps(buf, new_lines, hunks)
   vim.api.nvim_buf_call(buf, function()
-    vim.b._formatter_new_lines = lines
-    vim.cmd("silent keepjumps lockmarks call setline(1, b:_formatter_new_lines)")
-    vim.b._formatter_new_lines = nil
+    for hunk_idx = #hunks, 1, -1 do
+      local hunk = hunks[hunk_idx]
+      local old_start, old_count, new_start, new_count = hunk[1], hunk[2], hunk[3], hunk[4]
 
-    if new_count < old_count then
-      vim.cmd(("silent keepjumps lockmarks %d,%ddelete _"):format(new_count + 1, old_count))
+      if new_count > 0 then
+        local replacement = {}
+        for i = 0, new_count - 1 do
+          replacement[#replacement + 1] = new_lines[new_start + i]
+        end
+
+        vim.b._formatter_new_lines = replacement
+        vim.cmd(("silent keepjumps lockmarks call append(%d, b:_formatter_new_lines)"):format(old_start - 1))
+        vim.b._formatter_new_lines = nil
+      end
+
+      if old_count > 0 then
+        local delete_start = old_start + new_count
+        vim.cmd(("silent keepjumps lockmarks %d,%ddelete _"):format(delete_start, delete_start + old_count - 1))
+      end
     end
   end)
 end
@@ -803,9 +815,10 @@ local function format_buffer(cmd, bufnr)
 
   local marks = snapshot_local_letter_marks(buf)
   local new_lines = vim.split(formatted, "\n", {trimempty = false})
-  local mapped_marks = map_marks_through_line_diff(old_lines, new_lines, marks)
+  local hunks = line_diff_hunks(old_lines, new_lines)
+  local mapped_marks = map_marks_through_line_diff(old_lines, new_lines, marks, hunks)
 
-  set_buffer_lines_keepjumps(buf, new_lines)
+  apply_line_diff_keepjumps(buf, new_lines, hunks)
   restore_local_letter_marks(buf, mapped_marks)
 
   vim.fn.winrestview(view)

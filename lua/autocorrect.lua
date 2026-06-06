@@ -141,10 +141,23 @@ end
 
 -- Core autocorrect logic
 
+local function active_rules_for_text(text, rules)
+  local active = {}
+
+  for wrong, right in pairs(rules) do
+    if text:find(wrong) then
+      active[#active + 1] = { wrong = wrong, right = right }
+    end
+  end
+
+  return active
+end
+
 local function apply_rules_to_line(line, rules)
   local edits = {}
 
-  for wrong, right in pairs(rules) do
+  for _, rule in ipairs(rules) do
+    local wrong, right = rule.wrong, rule.right
     local start = 1
     while true do
       local s, e, cap = line:find(wrong, start)
@@ -182,19 +195,41 @@ end
 -- Apply replacements without polluting the changelist used by g; / g,.
 local function autocorrect_buffer(bufnr, rules)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local active_rules = active_rules_for_text(table.concat(lines, "\n"), rules)
+  if #active_rules == 0 then return end
+
+  local changed = {}
 
   for i, orig_line in ipairs(lines) do
     if orig_line and orig_line ~= "" then
-      local fixed = apply_rules_to_line(orig_line, rules)
+      local fixed = apply_rules_to_line(orig_line, active_rules)
       if fixed ~= orig_line then
-        vim.api.nvim_buf_call(bufnr, function()
-          vim.b._autocorrect_line = fixed
-          vim.cmd(("silent keepjumps lockmarks call setline(%d, b:_autocorrect_line)"):format(i))
-          vim.b._autocorrect_line = nil
-        end)
+        changed[#changed + 1] = { lnum = i, line = fixed }
       end
     end
   end
+
+  if #changed == 0 then return end
+
+  vim.api.nvim_buf_call(bufnr, function()
+    local idx = 1
+    while idx <= #changed do
+      local start_lnum = changed[idx].lnum
+      local replacement = { changed[idx].line }
+      local next_idx = idx + 1
+
+      while next_idx <= #changed and changed[next_idx].lnum == start_lnum + #replacement do
+        replacement[#replacement + 1] = changed[next_idx].line
+        next_idx = next_idx + 1
+      end
+
+      vim.b._autocorrect_lines = replacement
+      vim.cmd(("silent keepjumps lockmarks call setline(%d, b:_autocorrect_lines)"):format(start_lnum))
+      vim.b._autocorrect_lines = nil
+
+      idx = next_idx
+    end
+  end)
 end
 
 -- Always-on tests (simple input → output)
@@ -289,7 +324,7 @@ function M.run_tests()
       M.filetype_replacements[t.ft] or {}
     )
 
-    local out = apply_rules_to_line(t.mistaken, rules)
+    local out = apply_rules_to_line(t.mistaken, active_rules_for_text(t.mistaken, rules))
 
     if out ~= t.expected then
       error(
