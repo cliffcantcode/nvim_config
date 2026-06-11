@@ -70,6 +70,7 @@ M.replacements = {
   ["attatched"] = "attached",
   ["equivical"] = "equivocal",
   ["Vallue"] = "Value",
+  ["exhauseted"] = "exhausted",
 }
 
 M.filetype_replacements = {
@@ -371,4 +372,5 @@ end
 setup_autocmd()
 
 return M
+
 
