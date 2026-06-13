@@ -95,5 +95,135 @@ vim.keymap.set("n", "<leader>hn", function() multiply_number_under_cursor(0.5) e
 vim.keymap.set("n", "]q", "<cmd>cnext<cr>", { desc = "Quickfix next" })
 vim.keymap.set("n", "[q", "<cmd>cprev<cr>", { desc = "Quickfix prev" })
 
+local function find_paren_pair_on_line(line, cursor_col0)
+  local stack = {}
+  local pairs = {}
+  local in_string = nil
+  local escape = false
+
+  for i = 1, #line do
+    local ch = line:sub(i, i)
+
+    if in_string then
+      if escape then
+        escape = false
+      elseif ch == "\\" then
+        escape = true
+      elseif ch == in_string then
+        in_string = nil
+      end
+    else
+      if ch == "\"" or ch == "'" then
+        in_string = ch
+      elseif ch == "(" then
+        stack[#stack + 1] = i
+      elseif ch == ")" and #stack > 0 then
+        local open = table.remove(stack)
+        pairs[#pairs + 1] = { open = open, close = i }
+      end
+    end
+  end
+
+  local cursor = cursor_col0 + 1
+  local best
+  for _, pair in ipairs(pairs) do
+    if pair.open < cursor and cursor <= pair.close then
+      if not best or pair.open > best.open then
+        best = pair
+      end
+    end
+  end
+  if best then return best end
+
+  for _, pair in ipairs(pairs) do
+    if not best or math.abs(pair.open - cursor) < math.abs(best.open - cursor) then
+      best = pair
+    end
+  end
+  return best
+end
+
+local function split_top_level_args(text)
+  local args = {}
+  local start = 1
+  local depth = 0
+  local in_string = nil
+  local escape = false
+
+  for i = 1, #text do
+    local ch = text:sub(i, i)
+
+    if in_string then
+      if escape then
+        escape = false
+      elseif ch == "\\" then
+        escape = true
+      elseif ch == in_string then
+        in_string = nil
+      end
+    else
+      if ch == "\"" or ch == "'" then
+        in_string = ch
+      elseif ch == "(" or ch == "{" or ch == "[" then
+        depth = depth + 1
+      elseif ch == ")" or ch == "}" or ch == "]" then
+        if depth > 0 then depth = depth - 1 end
+      elseif ch == "," and depth == 0 then
+        args[#args + 1] = text:sub(start, i - 1)
+        start = i + 1
+      end
+    end
+  end
+
+  args[#args + 1] = text:sub(start)
+  return args
+end
+
+local function strip_type_from_arg(arg)
+  local leading, body, trailing = arg:match("^(%s*)(.-)(%s*)$")
+  if not body or body == "" then return arg end
+  if body:find("=", 1, true) then return arg end
+
+  local name_part = body:match("^(.-)%s*:%s*.+$")
+  if not name_part then return arg end
+
+  local name = name_part:match("([A-Za-z_][A-Za-z0-9_]*)%s*$")
+  if not name then return arg end
+
+  local before_name = name_part:sub(1, #name_part - #name)
+  if before_name:find("[^%sA-Za-z0-9_]") then return arg end
+
+  return leading .. name .. trailing
+end
+
+local function remove_types_inside_parens()
+  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+  local line = vim.api.nvim_get_current_line()
+  local pair = find_paren_pair_on_line(line, col)
+  if not pair then return end
+
+  local inside = line:sub(pair.open + 1, pair.close - 1)
+  local args = split_top_level_args(inside)
+  local changed = false
+
+  for i, arg in ipairs(args) do
+    local stripped = strip_type_from_arg(arg)
+    if stripped ~= arg then
+      changed = true
+      args[i] = stripped
+    end
+  end
+
+  if not changed then return end
+
+  local new_inside = table.concat(args, ",")
+  local new_line = line:sub(1, pair.open) .. new_inside .. line:sub(pair.close)
+  vim.api.nvim_set_current_line(new_line)
+  pcall(vim.api.nvim_win_set_cursor, 0, { row, math.min(col, #new_line) })
+end
+
+vim.keymap.set("n", "<leader>dtip", remove_types_inside_parens, { desc = "[d]elete [t]ypes [i]n [p]arens" })
+
 -- vim: ts=2 sts=2 sw=2 et
+
 
