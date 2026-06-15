@@ -1,4 +1,45 @@
 -- Highlight todo, notes, etc in comments
+local TODO_KEYWORDS = "TODO,RESUME,COMPRESS,STUDY,FIX,FIXME,BUG,ISSUE,WARN,HACK,PERF"
+
+local function current_file_dir()
+  local filename = vim.api.nvim_buf_get_name(0)
+  if filename == "" then return vim.fn.getcwd() end
+  return vim.fn.fnamemodify(filename, ":p:h")
+end
+
+local function todo_search_root()
+  local bufnr = 0
+
+  local project_root = vim.fs.root(bufnr, {
+    "build.zig",
+    "build.zig.zon",
+    "Package.swift",
+    "Cargo.toml",
+    "pyproject.toml",
+    "package.json",
+    "go.mod",
+  })
+  if project_root then return project_root end
+
+  return vim.fs.root(bufnr, { ".git" }) or current_file_dir()
+end
+
+local function todo_telescope()
+  local telescope = require("telescope")
+  pcall(telescope.load_extension, "todo-comments")
+  telescope.extensions["todo-comments"].todo({
+    cwd = todo_search_root(),
+    keywords = TODO_KEYWORDS,
+  })
+end
+
+local function todo_quickfix()
+  require("todo-comments.search").setqflist({
+    cwd = todo_search_root(),
+    keywords = TODO_KEYWORDS,
+  })
+end
+
 return {
   {
     'folke/todo-comments.nvim',
@@ -59,8 +100,8 @@ return {
 
     -- Better lazy.nvim style (lets lazy manage keys cleanly)
     keys = {
-      { "<leader>st", "<cmd>TodoTelescope keywords=TODO,RESUME,COMPRESS,STUDY,FIX,FIXME,BUG,ISSUE,WARN,HACK,PERF<cr>", desc = "[S]earch [T]odos" },
-      { "<leader>sT", "<cmd>TodoQuickFix keywords=TODO,RESUME,COMPRESS,STUDY,FIX,FIXME,BUG,ISSUE,WARN,HACK,PERF<cr>",  desc = "[S]end [T]odos to quickfix" },
+      { "<leader>st", todo_telescope, desc = "[S]earch [T]odos" },
+      { "<leader>sT", todo_quickfix, desc = "[S]end [T]odos to quickfix" },
     },
   },
 }
