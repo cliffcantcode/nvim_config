@@ -71,6 +71,7 @@ M.replacements = {
   ["equivical"] = "equivocal",
   ["Vallue"] = "Value",
   ["exhauseted"] = "exhausted",
+  ["Senario"] = "Scenario",
 }
 
 M.filetype_replacements = {
