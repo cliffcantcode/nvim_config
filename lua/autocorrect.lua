@@ -73,6 +73,7 @@ M.replacements = {
   ["exhauseted"] = "exhausted",
   ["Senario"] = "Scenario",
   ["intial"] = "initial",
+  ["domian"] = "domain",
 }
 
 M.filetype_replacements = {
