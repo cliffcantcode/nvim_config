@@ -74,6 +74,7 @@ M.replacements = {
   ["Senario"] = "Scenario",
   ["intial"] = "initial",
   ["domian"] = "domain",
+  ["Registerd"] = "Registered",
 }
 
 M.filetype_replacements = {
@@ -118,6 +119,9 @@ M.filetype_replacements = {
     ["meantion"] = "mention",
     ["comunicate"] = "communicate",
     ["secnario"] = "scenario",
+    ["Teprum"] = "Tephrum",
+    ["teprum"] = "tephrum",
+    ["agnositc"] = "agnostic",
   },
 }
 

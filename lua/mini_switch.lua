@@ -65,6 +65,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "credit", "debit" },
   { "read", "write" },
   { "reader", "writer" },
+  { "Row", "Col" },
 }
 
 local ft_defaults = {
