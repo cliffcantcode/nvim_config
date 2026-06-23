@@ -121,7 +121,10 @@ M.filetype_replacements = {
     ["secnario"] = "scenario",
     ["Teprum"] = "Tephrum",
     ["teprum"] = "tephrum",
+    ["Tehprum"] = "Tephrum",
+    ["tehprum"] = "tephrum",
     ["agnositc"] = "agnostic",
+    ["opprotunity"] = "opportunity",
   },
 }
 
