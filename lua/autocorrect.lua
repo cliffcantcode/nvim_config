@@ -75,6 +75,7 @@ M.replacements = {
   ["intial"] = "initial",
   ["domian"] = "domain",
   ["Registerd"] = "Registered",
+  ["trasnform"] = "transform",
 }
 
 M.filetype_replacements = {
