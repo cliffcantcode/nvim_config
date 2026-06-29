@@ -95,6 +95,7 @@ M.filetype_replacements = {
     ["scr_"] = "src_",
     ["strcut"] = "struct",
     ["impoart"] = "import",
+    ["std.debug.asset"] = "std.debug.assert",
   },
   swift = {
     ["pointtee"] = "pointee",
