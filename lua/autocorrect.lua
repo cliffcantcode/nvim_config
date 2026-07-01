@@ -76,6 +76,8 @@ M.replacements = {
   ["domian"] = "domain",
   ["Registerd"] = "Registered",
   ["trasnform"] = "transform",
+  ["Srouce"] = "Source",
+  ["partilces"] = "particles",
 }
 
 M.filetype_replacements = {
