@@ -78,6 +78,7 @@ M.replacements = {
   ["trasnform"] = "transform",
   ["Srouce"] = "Source",
   ["partilces"] = "particles",
+  ["penetraction"] = "penetration",
 }
 
 M.filetype_replacements = {
