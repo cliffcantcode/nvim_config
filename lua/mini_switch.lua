@@ -14,6 +14,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "<=", ">=" },
   { "<", ">" },
   { "+", "-" },
+  { "add", "sub" },
   { "!=", "==" },
   { "X", "Y", "Z" },
   { "x", "y", "z" },
