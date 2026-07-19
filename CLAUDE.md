@@ -1,0 +1,32 @@
+# CLAUDE.md
+
+## What this repo is
+
+A personal Neovim config whose explicit design goal is fast, low-friction, keyboard-only editing. Most of `lua/*.lua` (as opposed to `lua/plugins/*.lua`) is hand-written editing automation, not third-party plugins — treat those files as the highest-leverage place to make the user faster, and edit them expecting real usage seconds after `:w`.
+
+## Dev loop / commands
+
+- **Reload after any config change:** `<leader>ns` (defined in `lua/keymaps.lua`) writes and re-sources `init.lua`. This is the primary edit-test cycle — there is no separate build step.
+- **There is no external test runner.** Several modules (`autocorrect.lua`, `dimensions.lua`, `linter.lua`, `formatter.lua`) embed their own `run_tests()`/`M.run_tests()` self-checks that execute automatically at `require` time (or, for `formatter.lua`'s Zig semicolon-fixer, lazily on first `.zig` write). A broken rule fails loud via `error()` or `vim.notify` the moment the file is sourced — reloading (`<leader>ns`) *is* running the test suite. When editing one of these files, add a case to its `run_tests()`/test table rather than testing by hand.
+- **Syntax-check a lua file without opening Neovim:** `luac -p <file>`. This only catches syntax errors, not correctness bugs (undefined globals, unused locals, variable shadowing) — for those, run `luacheck <file>` (config in `.luacheckrc`, which declares `vim` as a known global so `vim.*` calls don't false-positive).
+- **Ad hoc lint pass:** `<leader>lf` (current file) / `<leader>ld` (current directory) run the custom linter in `lua/linter.lua` — not a general linter, just this user's own heuristic rules (min/max comparison direction, truncated-float multiplication, etc).
+
+## Architecture
+
+**Load order in `init.lua` is meaningful, not incidental.** `mapleader` and the Swift treesitter-disable autocmd are set before `lazy-plugins` loads because later code depends on them being in place first. If adding a new top-level `require` in `init.lua`, place it deliberately relative to `lazy-bootstrap`/`lazy-plugins`, not just appended at the end.
+
+**`lua/plugins/*.lua`** are ordinary `lazy.nvim` plugin specs (one file per plugin/group) — nothing unusual here.
+
+**`lua/*.lua`** (siblings of `plugins/`, e.g. `autocorrect.lua`, `mini_switch.lua`, `dimensions.lua`, `linter.lua`, `formatter.lua`) are the user's own editing-automation modules, not plugins. Shared conventions across them, all in service of "fast and practical":
+- Self-tests baked into the module (see Dev loop above) — treat any change to a rule table as needing a matching test case, since that's the only thing that will catch a regression.
+- Buffer mutations go through `silent keepjumps lockmarks` + manual line-diff/mark remapping (see `formatter.lua`'s `snapshot_local_letter_marks`/`map_marks_through_line_diff`) instead of naive whole-buffer replace. This is not incidental care — `autocommands.lua` auto-saves on `BufLeave` (`SaveOnExit`), so `autocorrect.lua`'s typo fixes and `formatter.lua`'s Zig semicolon-insertion and `zig fmt` pass run on essentially every buffer switch, not just explicit `:w`. Any cursor/mark/jumplist drift introduced here is felt constantly, so preserving them is a hard requirement for any edit to these files.
+- `autocorrect.lua` excludes itself (`M.excluded_files = { "autocorrect.lua" }`) from its own correction pass — editing the typo-rule table won't get "corrected" on save.
+- `mini_switch.lua` and `dimensions.lua` both implement token-cycling (`ms` / `<leader>cd`) but are conceptually distinct: `mini_switch` is a general opposite/synonym cycler (`vim.g.switch_custom_definitions` + per-filetype `ft_defaults`) plus a Zig-specific enum-tag cycler that queries `zls` over LSP; `dimensions.lua` is narrowly about axis/field cycling (`x/y/z`, `credit/debit`, etc.) with its own exclusion list (`MAX`, `index`, `deadzone`) to avoid false positives.
+
+**Startup speed is actively managed, not assumed.** `vim.loader.enable()` in `init.lua`, a `disabled_plugins` list in `lazy-plugins.lua` (netrw, gzip, tarPlugin, etc — netrw specifically because `oil.nvim` replaces it), and a `VimEnter`-triggered deferred background load of treesitter/lspconfig/gitsigns/indent-blankline (`autocommands.lua`, `WarmupLazyPlugins`) all exist to keep cold start fast without giving up early availability of core features. `lua/profile.lua` exposes `:StartProfile`/`:StopProfile` to measure the effect of any change here — use it before/after touching startup-path code rather than guessing.
+
+**AI assistant stack (`codecompanion.nvim` + local Ollama) is hardware-constrained.** The machine has 16GB unified memory, which caps viable model weights at roughly 9-10GB (Q4 quant) — this bounds every model choice in `lua/plugins/codecompanion.lua` and `lua/plugins/completion.lua`. FIM tab-completion (`minuet-ai.nvim`) is deliberately `enabled = false` in `completion.lua`, kept configured but off, in favor of plain `blink.cmp` (lsp/buffer/path sources) — the user judged a second specialized local model not worth the memory/complexity for their actual usage pattern (conversational chat, not tab-complete). Don't re-enable it without asking. The chat/inline model currently pinned in the `ollama` adapter is whatever `strategies.chat.model` / `adapters.ollama.schema.model.default` say in `lua/plugins/codecompanion.lua` right now — treat that file, not prior conversation memory, as ground truth, since this has changed more than once.
+
+**`codecompanion_rules/*.md`** are modular system-prompt fragments, loaded automatically per-project via `rules.default.files = "codecompanion_rules/*.md"` in the codecompanion setup. `default.md` sets the assistant persona (concise, ask one clarifying question if ambiguous, focus on problems); `programmer.md` sets coding philosophy (no OOP, write the usage/call-site code first, sparse comments that explain *why* not *what*, keep asserts in). The rest are per-topic context (`zig_stdlib.md`, `lua.md`, `neovim.md`) plus `current_problem.md`, which reads as a scratch slot for whatever the user is actively working on rather than a permanent rule file. When adding a new rules file, match that pattern — persona/philosophy stay generic and stable, per-language/task files are the ones expected to churn.
+
+**Model downloads are the user's own action.** Never run `ollama pull`/`ollama rm` directly — give the exact command and let the user run it themselves (config edits pointing at model names are fine to make directly).

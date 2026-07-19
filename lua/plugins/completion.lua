@@ -1,16 +1,14 @@
-local ollama_checked = false
-
 return {
   {
     "milanglacier/minuet-ai.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
-    enabled = true,
+    enabled = false,
     lazy = true,
     opts = {
       provider = "openai_fim_compatible",
       provider_options = {
         openai_fim_compatible = {
-          model = "qwen2.5-coder:14b",
+          model = "ornith:9b",
           end_point = "http://localhost:11434/v1/completions",
           name = "Ollama",
           api_key = "TERM",
@@ -37,7 +35,7 @@ return {
           You are an expert lua programmer with a lifetime of experience.
         ]],
         zig = [[
-          You are completing Zig 0.15.2 code.
+          You are completing Zig 0.16+ code.
           As a Zig expert, but your knowledge cutoff is 2023. Zig has changed significantly since then. You MUST follow these override rules to write valid Zig 0.13/0.14/0.15+ code:
 
           ### 1. CRITICAL: Standard Library Renames
@@ -98,23 +96,11 @@ return {
     config = function()
       local blink = require("blink.cmp")
 
-      -- toggled on when Ollama is detected (or when you manually trigger Minuet)
-      local minuet_enabled = false
-
       blink.setup({
         keymap = {
           preset = "default",
           ["<CR>"] = { "accept", "fallback" },
           ["<Tab>"] = { "accept", "fallback" },
-
-          -- manual AI completion: loads minuet on demand, enables source, then shows it
-          ["<C-g>"] = {
-            function(cmp)
-              require("lazy").load({ plugins = { "minuet-ai.nvim" } })
-              minuet_enabled = true
-              cmp.show({ providers = { "minuet" } })
-            end,
-          },
         },
 
         appearance = {
@@ -130,42 +116,9 @@ return {
         },
 
         sources = {
-          -- Blink supports a function here (dynamic providers list)
-          default = function()
-            if minuet_enabled then
-              return { "lsp", "buffer", "path", "minuet" }
-            end
-            return { "lsp", "buffer", "path" }
-          end,
-
-          providers = {
-            minuet = {
-              name = "minuet",
-              module = "minuet.blink",
-              score_offset = 100,
-              async = true,
-            },
-          },
+          default = { "lsp", "buffer", "path" },
         },
       })
-
-      vim.defer_fn(function()
-        if ollama_checked then return end
-        ollama_checked = true
-
-        vim.system(
-          { "curl", "-s", "-m", "1", "http://localhost:11434/api/tags" },
-          { text = true },
-          function(result)
-            if result.code == 0 and result.stdout:match("models") then
-              vim.schedule(function()
-                require("lazy").load({ plugins = { "minuet-ai.nvim" } })
-                minuet_enabled = true
-              end)
-            end
-          end
-        )
-      end, 500)
     end,
   },
 }

@@ -13,7 +13,6 @@ return {
       matchup = { enabled = true },
       highlight = {
         enable = true,
-        disable = { 'swift' },
         disable = function(lang, buf)
           if lang == "swift" then return true end
 

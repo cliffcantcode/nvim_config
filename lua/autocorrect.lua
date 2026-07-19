@@ -80,6 +80,8 @@ M.replacements = {
   ["partilces"] = "particles",
   ["penetraction"] = "penetration",
   ["penenitration"] = "penetration",
+  ["Foreces"] = "Forces",
+  ["tamplate"] = "template",
 }
 
 M.filetype_replacements = {
@@ -131,6 +133,15 @@ M.filetype_replacements = {
     ["tehprum"] = "tephrum",
     ["agnositc"] = "agnostic",
     ["opprotunity"] = "opportunity",
+    ["insentives"] = "incentives",
+    ["encorages"] = "encourages",
+    ["Similiar"] = "Similar",
+    ["opprotunisticly"] = "opportunistically",
+    ["paradigmn"] = "paradigm",
+    ["commiting"] = "committing",
+    ["visisitudes"] = "vicissitudes",
+    ["opperations"] = "operations",
+    ["appreaciate"] = "appreciate",
   },
 }
 
