@@ -226,4 +226,3 @@ vim.keymap.set("n", "<leader>dtip", remove_types_inside_parens, { desc = "[d]ele
 
 -- vim: ts=2 sts=2 sw=2 et
 
-
