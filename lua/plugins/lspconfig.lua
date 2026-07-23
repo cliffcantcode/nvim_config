@@ -49,7 +49,45 @@ return {
       single_file_support = true,
     })
 
-    vim.lsp.enable({ "zls", "sourcekit" })
+    vim.lsp.config("denols", {
+      capabilities = capabilities,
+
+      root_dir = function(bufnr, on_dir)
+        on_dir(root_or_file_dir(bufnr, { "deno.json", "deno.jsonc", "package.json", ".git" }))
+      end,
+
+      single_file_support = true,
+      settings = {
+        deno = {
+          enable = true,
+        },
+      },
+    })
+
+    vim.lsp.config("superhtml", {
+      capabilities = capabilities,
+
+      root_dir = function(bufnr, on_dir)
+        on_dir(root_or_file_dir(bufnr, { ".git" }))
+      end,
+
+      single_file_support = true,
+    })
+
+    -- Biome's default config also covers js/html; restrict it to css so it
+    -- doesn't double up with quick_lint_js/superhtml on those filetypes.
+    vim.lsp.config("biome", {
+      capabilities = capabilities,
+      filetypes = { "css" },
+
+      root_dir = function(bufnr, on_dir)
+        on_dir(root_or_file_dir(bufnr, { "biome.json", "biome.jsonc", ".git" }))
+      end,
+
+      single_file_support = true,
+    })
+
+    vim.lsp.enable({ "zls", "sourcekit", "denols", "superhtml", "biome" })
 
     -- LSP keymaps (buffer-local, only when an LSP actually attaches)
     vim.api.nvim_create_autocmd("LspAttach", {

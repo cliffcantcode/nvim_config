@@ -657,6 +657,17 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 
 M.formatters = {
   zig = "zig fmt --stdin",
+  html = "superhtml fmt --stdin",
+  css = function(bufnr)
+    local path = vim.api.nvim_buf_get_name(bufnr)
+    if path == "" then path = "buffer.css" end
+    return "biome format --stdin-file-path=" .. vim.fn.shellescape(path)
+  end,
+  javascript = function(bufnr)
+    local path = vim.api.nvim_buf_get_name(bufnr)
+    if path == "" then path = "buffer.js" end
+    return "biome format --stdin-file-path=" .. vim.fn.shellescape(path)
+  end,
 }
 
 local function snapshot_local_letter_marks(buf)
@@ -825,11 +836,14 @@ local function format_buffer(cmd, bufnr)
 end
 
 vim.api.nvim_create_autocmd("BufWritePre", {
-  pattern = "*.zig",
+  pattern = { "*.zig", "*.html", "*.css", "*.js" },
   callback = function(args)
     local bufnr = args.buf
     local ft = vim.bo[bufnr].filetype
     local cmd = M.formatters[ft]
+    if type(cmd) == "function" then
+      cmd = cmd(bufnr)
+    end
     if cmd then
       format_buffer(cmd, bufnr)
     end
