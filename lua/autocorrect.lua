@@ -82,6 +82,7 @@ M.replacements = {
   ["penenitration"] = "penetration",
   ["Foreces"] = "Forces",
   ["tamplate"] = "template",
+  ["capcity"] = "capacity",
 }
 
 M.filetype_replacements = {
@@ -103,6 +104,7 @@ M.filetype_replacements = {
     ["strcut"] = "struct",
     ["impoart"] = "import",
     ["std.debug.asset"] = "std.debug.assert",
+    ["uszie"] = "usize",
   },
   swift = {
     ["pointtee"] = "pointee",
