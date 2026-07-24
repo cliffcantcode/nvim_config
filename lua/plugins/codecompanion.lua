@@ -80,7 +80,7 @@ return {
             schema = {
               model = {
                 default = "qwen3:14b",
-                choices = { "qwen3:14b" }, -- Exclude other models.
+                choices = { "qwen3:14b", }, -- Exclude other models.
               },
               num_ctx = {
                 default = 32768, -- Empirically ~6.3GB total on this machine, vs 5.9GB at the 4096 default.
@@ -247,3 +247,4 @@ return {
     },
   }
 }
+

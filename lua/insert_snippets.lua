@@ -44,3 +44,36 @@ end
 
 end, { desc = "Insert a [f]or-[l]oop template." })
 
+-- Insert a language-specific assert call, cursor left in insert mode inside the parens.
+vim.keymap.set("n", "<leader>as", function()
+  local ft = vim.bo.filetype
+  local text = ""
+
+  if ft == "zig" then
+    text = "std.debug.assert();"
+  elseif ft == "c" or ft == "cpp" then
+    text = "assert();"
+  elseif ft == "lua" then
+    text = "assert()"
+  elseif ft == "python" then
+    text = "assert "
+  elseif ft == "rust" then
+    text = "assert!();"
+  else
+    vim.notify("No assert template for filetype: " .. ft, vim.log.levels.WARN)
+    return
+  end
+
+  local line = vim.fn.line(".")
+  local col = vim.fn.col(".")
+  local current = vim.fn.getline(line)
+  local before = current:sub(1, col - 1)
+  local after = current:sub(col)
+  vim.fn.setline(line, before .. text .. after)
+
+  -- Place the cursor just inside the opening paren (or after "assert " for python).
+  local offset = text:find("%(") or #text
+  vim.api.nvim_win_set_cursor(0, { line, #before + offset })
+  vim.cmd("startinsert")
+end, { desc = "Insert an [a]ssert [s]tatement." })
+

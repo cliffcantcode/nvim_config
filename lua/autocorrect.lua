@@ -83,6 +83,7 @@ M.replacements = {
   ["Foreces"] = "Forces",
   ["tamplate"] = "template",
   ["capcity"] = "capacity",
+  ["canditages"] = "candidates",
 }
 
 M.filetype_replacements = {
