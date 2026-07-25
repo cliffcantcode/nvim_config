@@ -44,6 +44,7 @@ end
 
 end, { desc = "Insert a [f]or-[l]oop template." })
 
+-- TODO: Can we get the assert insert to be properly indented and work in normal mode?
 -- Insert a language-specific assert call, cursor left in insert mode inside the parens.
 vim.keymap.set("n", "<leader>as", function()
   local ft = vim.bo.filetype
