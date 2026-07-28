@@ -44,9 +44,9 @@ end
 
 end, { desc = "Insert a [f]or-[l]oop template." })
 
--- TODO: Can we get the assert insert to be properly indented and work in normal mode?
--- Insert a language-specific assert call, cursor left in insert mode inside the parens.
-vim.keymap.set("n", "<leader>as", function()
+-- Insert a language-specific assert call, cursor left inside the parens.
+-- Shared by the normal-mode and insert-mode triggers below.
+local function insert_assert_snippet()
   local ft = vim.bo.filetype
   local text = ""
 
@@ -66,15 +66,40 @@ vim.keymap.set("n", "<leader>as", function()
   end
 
   local line = vim.fn.line(".")
-  local col = vim.fn.col(".")
-  local current = vim.fn.getline(line)
+  local col = vim.fn.col(".") local current = vim.fn.getline(line)
   local before = current:sub(1, col - 1)
   local after = current:sub(col)
+
+  -- Target column (just inside the opening paren, or after "assert " for
+  -- python) computed before re-indenting, since `before` is what carries
+  -- whatever indentation currently exists on the line.
+  local old_indent = #(current:match("^%s*") or "")
+  local offset = text:find("%(") or #text
+  local target_col = #before + offset
+
   vim.fn.setline(line, before .. text .. after)
 
-  -- Place the cursor just inside the opening paren (or after "assert " for python).
-  local offset = text:find("%(") or #text
-  vim.api.nvim_win_set_cursor(0, { line, #before + offset })
+  -- Re-indent the line to match the surrounding block. This matters most
+  -- when inserting on a blank line, where `before` carries no indentation
+  -- of its own (col 1 -> ""), so the snippet would otherwise land at the
+  -- start of the line instead of lined up with the code around it.
+  vim.cmd(string.format("silent %d,%dnormal! ==", line, line))
+
+  local new_indent = #(vim.fn.getline(line):match("^%s*") or "")
+  target_col = target_col + (new_indent - old_indent)
+
+  vim.api.nvim_win_set_cursor(0, { line, target_col })
+end
+
+-- <M-a>s in both modes: (M is the option key on mac) normal mode drops into insert after placing the
+-- cursor, insert mode is already there. Alt is otherwise unused in this
+-- config, so a single keystroke works without colliding with anything
+-- (unlike Ctrl, which is already heavily claimed by blink.cmp and window
+-- nav binds) and without overloading a key already in regular use.
+vim.keymap.set("n", "<M-a><M-s>", function()
+  insert_assert_snippet()
   vim.cmd("startinsert")
 end, { desc = "Insert an [a]ssert [s]tatement." })
+
+vim.keymap.set("i", "<M-a><M-s>", insert_assert_snippet, { desc = "Insert an [a]ssert [s]tatement." })
 
