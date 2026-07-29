@@ -661,12 +661,12 @@ M.formatters = {
   css = function(bufnr)
     local path = vim.api.nvim_buf_get_name(bufnr)
     if path == "" then path = "buffer.css" end
-    return "biome format --stdin-file-path=" .. vim.fn.shellescape(path)
+    return "biome format --stdin-file-path=" .. vim.fn.shellescape(path) .. " --line-width=320"
   end,
   javascript = function(bufnr)
     local path = vim.api.nvim_buf_get_name(bufnr)
     if path == "" then path = "buffer.js" end
-    return "biome format --stdin-file-path=" .. vim.fn.shellescape(path)
+    return "biome format --stdin-file-path=" .. vim.fn.shellescape(path) .. " --line-width=320"
   end,
 }
 
