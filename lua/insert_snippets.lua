@@ -51,7 +51,8 @@ local function insert_assert_snippet()
   local text = ""
 
   if ft == "zig" then
-    text = "std.debug.assert();"
+    -- Adjusted for proper aliasing convention.
+    text = "assert();"
   elseif ft == "c" or ft == "cpp" then
     text = "assert();"
   elseif ft == "lua" then
