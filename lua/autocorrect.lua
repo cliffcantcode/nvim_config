@@ -84,6 +84,7 @@ M.replacements = {
   ["tamplate"] = "template",
   ["capcity"] = "capacity",
   ["canditages"] = "candidates",
+  ["phsyics"] = "physics",
 }
 
 M.filetype_replacements = {
