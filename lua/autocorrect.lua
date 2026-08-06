@@ -85,6 +85,8 @@ M.replacements = {
   ["capcity"] = "capacity",
   ["canditages"] = "candidates",
   ["phsyics"] = "physics",
+  ["LISCENSE"] = "LICENSE",
+  ["fiail"] = "fail",
 }
 
 M.filetype_replacements = {
