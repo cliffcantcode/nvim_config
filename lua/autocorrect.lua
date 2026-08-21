@@ -87,6 +87,9 @@ M.replacements = {
   ["phsyics"] = "physics",
   ["LISCENSE"] = "LICENSE",
   ["fiail"] = "fail",
+  ["indentifier"] = "identifier",
+  ["dependecnies"] = "dependencies",
+  ["assistances"] = "assistants",
 }
 
 M.filetype_replacements = {
