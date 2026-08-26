@@ -91,6 +91,8 @@ M.replacements = {
   ["dependecnies"] = "dependencies",
   ["assistances"] = "assistants",
   ["addnedum"] = "addendum",
+  ["contineu"] = "continue",
+  ["reutrn"] = "return",
 }
 
 M.filetype_replacements = {
@@ -113,6 +115,9 @@ M.filetype_replacements = {
     ["impoart"] = "import",
     ["std.debug.asset"] = "std.debug.assert",
     ["uszie"] = "usize",
+    ["switcht"] = "switch",
+    ["swtich"] = "switch",
+    ["ocmptime"] = "comptime",
   },
   swift = {
     ["pointtee"] = "pointee",
