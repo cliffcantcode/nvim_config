@@ -67,6 +67,8 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "read", "write" },
   { "reader", "writer" },
   { "Row", "Col" },
+  { "Estrogen", "Progesterone" },
+  { "estrogen", "progesterone" },
 }
 
 local ft_defaults = {

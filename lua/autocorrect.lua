@@ -90,6 +90,7 @@ M.replacements = {
   ["indentifier"] = "identifier",
   ["dependecnies"] = "dependencies",
   ["assistances"] = "assistants",
+  ["addnedum"] = "addendum",
 }
 
 M.filetype_replacements = {
