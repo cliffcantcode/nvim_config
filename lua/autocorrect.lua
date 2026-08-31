@@ -92,7 +92,9 @@ M.replacements = {
   ["assistances"] = "assistants",
   ["addnedum"] = "addendum",
   ["contineu"] = "continue",
+  ["conintue"] = "continue",
   ["reutrn"] = "return",
+  ["Flaot"] = "Float",
 }
 
 M.filetype_replacements = {
