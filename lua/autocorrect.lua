@@ -91,7 +91,9 @@ M.replacements = {
   ["dependecnies"] = "dependencies",
   ["assistances"] = "assistants",
   ["contineu"] = "continue",
+  ["conintue"] = "continue",
   ["reutrn"] = "return",
+  ["Flaot"] = "Float",
 }
 
 M.filetype_replacements = {
