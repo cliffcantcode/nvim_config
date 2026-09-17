@@ -95,6 +95,7 @@ M.replacements = {
   ["conintue"] = "continue",
   ["reutrn"] = "return",
   ["Flaot"] = "Float",
+  ["plaese"] = "please",
 }
 
 M.filetype_replacements = {
@@ -159,6 +160,10 @@ M.filetype_replacements = {
     ["visisitudes"] = "vicissitudes",
     ["opperations"] = "operations",
     ["appreaciate"] = "appreciate",
+    ["412Coaching LLC"] = "412 Coaching LLC",
+  },
+  html = {
+    ["412Coaching LLC"] = "412 Coaching LLC",
   },
 }
 
