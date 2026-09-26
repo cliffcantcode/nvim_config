@@ -96,6 +96,9 @@ M.replacements = {
   ["Flaot"] = "Float",
   ["plaese"] = "please",
   ["constrols"] = "controls",
+  ["Vidoe"] = "Video",
+  ["Loundness"] = "Loudness",
+  ["loundness"] = "loudness",
 }
 
 M.filetype_replacements = {
