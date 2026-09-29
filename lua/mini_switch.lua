@@ -67,6 +67,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "read", "write" },
   { "reader", "writer" },
   { "Row", "Col" },
+  { "numerator", "denominator" },
 }
 
 local ft_defaults = {
