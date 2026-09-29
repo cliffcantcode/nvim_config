@@ -656,17 +656,17 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 --------------------------------------------------------------------------------
 
 M.formatters = {
-  zig = "zig fmt --stdin",
-  html = "superhtml fmt --stdin",
+  zig = { "zig", "fmt", "--stdin" },
+  html = { "superhtml", "fmt", "--stdin" },
   css = function(bufnr)
     local path = vim.api.nvim_buf_get_name(bufnr)
     if path == "" then path = "buffer.css" end
-    return "biome format --stdin-file-path=" .. vim.fn.shellescape(path) .. " --line-width=320"
+    return { "biome", "format", "--stdin-file-path=" .. path, "--line-width=320" }
   end,
   javascript = function(bufnr)
     local path = vim.api.nvim_buf_get_name(bufnr)
     if path == "" then path = "buffer.js" end
-    return "biome format --stdin-file-path=" .. vim.fn.shellescape(path) .. " --line-width=320"
+    return { "biome", "format", "--stdin-file-path=" .. path, "--line-width=320" }
   end,
 }
 
@@ -813,7 +813,15 @@ local function format_buffer(cmd, bufnr)
 
   -- Keep stdout and stderr apart: some formatters (superhtml) print warnings
   -- to stderr and still exit 0, and vim.fn.system would paste them into the file.
-  local result = vim.system({ "sh", "-c", cmd }, { stdin = old_text, text = true }):wait()
+  -- Argument lists avoid a dependency on a Unix shell and preserve paths with spaces.
+  local ok, result = pcall(function()
+    return vim.system(cmd, { stdin = old_text, text = true }):wait()
+  end)
+  if not ok then
+    vim.notify("Could not start formatter " .. cmd[1] .. ":\n" .. tostring(result), vim.log.levels.ERROR)
+    vim.fn.winrestview(view)
+    return
+  end
   local formatted = result.stdout or ""
 
   if result.code ~= 0 then
