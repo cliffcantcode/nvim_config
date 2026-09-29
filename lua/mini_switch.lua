@@ -69,6 +69,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "Row", "Col" },
   { "Estrogen", "Progesterone" },
   { "estrogen", "progesterone" },
+  { "numerator", "denominator" },
 }
 
 local ft_defaults = {

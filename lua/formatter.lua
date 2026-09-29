@@ -811,12 +811,19 @@ local function format_buffer(cmd, bufnr)
   local old_lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
   local old_text = table.concat(old_lines, "\n")
 
-  local formatted = vim.fn.system(cmd, old_text)
+  -- Keep stdout and stderr apart: some formatters (superhtml) print warnings
+  -- to stderr and still exit 0, and vim.fn.system would paste them into the file.
+  local result = vim.system({ "sh", "-c", cmd }, { stdin = old_text, text = true }):wait()
+  local formatted = result.stdout or ""
 
-  if vim.v.shell_error ~= 0 then
-    vim.notify("Formatter error:\n" .. formatted, vim.log.levels.ERROR)
+  if result.code ~= 0 then
+    vim.notify("Formatter error:\n" .. (result.stderr or "") .. formatted, vim.log.levels.ERROR)
     vim.fn.winrestview(view)
     return
+  end
+
+  if result.stderr and result.stderr ~= "" then
+    vim.notify("Formatter warning:\n" .. result.stderr, vim.log.levels.WARN)
   end
 
   if formatted == old_text or formatted == old_text .. "\n" then
