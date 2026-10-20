@@ -507,7 +507,32 @@ end
 -- Self-tests (run once on first Zig formatter use)
 --------------------------------------------------------------------------------
 
+local line_diff_hunks, apply_line_diff_keepjumps
+
 function M.run_tests()
+  -- vim.diff gives an insert-only hunk (old_count == 0) as "insert after old_start",
+  -- so applying it at old_start - 1 lands one line early (moved braces in zig fmt output).
+  for _, case in ipairs({
+    { name = "insert in the middle", old = { "a", "b", "c" }, new = { "a", "b", "X", "c" } },
+    { name = "insert at the top", old = { "b", "c" }, new = { "a", "b", "c" } },
+    { name = "insert at the end", old = { "a", "b" }, new = { "a", "b", "c" } },
+    { name = "delete one line", old = { "a", "b", "c" }, new = { "a", "c" } },
+    { name = "move a brace", old = { "for {", "  x", "}", "y", "z" }, new = { "for {", "  x", "y", "}", "z" } },
+  }) do
+    local buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, case.old)
+    apply_line_diff_keepjumps(buf, case.new, line_diff_hunks(case.old, case.new))
+    local out = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+    vim.api.nvim_buf_delete(buf, { force = true })
+    if not vim.deep_equal(out, case.new) then
+      error(
+        "[formatter self-test failed] line diff: " .. case.name .. "\n\n"
+        .. "Expected:\n" .. table.concat(case.new, "\n") .. "\n\n"
+        .. "Got:\n" .. table.concat(out, "\n")
+      )
+    end
+  end
+
   local ok_ts, ts = pcall(require, "vim.treesitter")
   if not ok_ts then
     error("[formatter self-test] vim.treesitter not available")
@@ -695,7 +720,7 @@ local function trim_line(line)
   return (line or ""):match("^%s*(.-)%s*$")
 end
 
-local function line_diff_hunks(old_lines, new_lines)
+function line_diff_hunks(old_lines, new_lines)
   local old_text = table.concat(old_lines, "\n")
   local new_text = table.concat(new_lines, "\n")
   return vim.diff(old_text, new_text, {
@@ -779,7 +804,7 @@ local function restore_local_letter_marks(buf, marks)
   end
 end
 
-local function apply_line_diff_keepjumps(buf, new_lines, hunks)
+function apply_line_diff_keepjumps(buf, new_lines, hunks)
   vim.api.nvim_buf_call(buf, function()
     for hunk_idx = #hunks, 1, -1 do
       local hunk = hunks[hunk_idx]
@@ -792,7 +817,8 @@ local function apply_line_diff_keepjumps(buf, new_lines, hunks)
         end
 
         vim.b._formatter_new_lines = replacement
-        vim.cmd(("silent keepjumps lockmarks call append(%d, b:_formatter_new_lines)"):format(old_start - 1))
+        local after = old_count == 0 and old_start or old_start - 1
+        vim.cmd(("silent keepjumps lockmarks call append(%d, b:_formatter_new_lines)"):format(after))
         vim.b._formatter_new_lines = nil
       end
 

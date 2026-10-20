@@ -124,7 +124,11 @@ M.filetype_replacements = {
     ["uszie"] = "usize",
     ["switcht"] = "switch",
     ["swtich"] = "switch",
+    ["swithch"] = "switch",
     ["ocmptime"] = "comptime",
+    ["Malfored"] = "Malformed",
+    ["yuv420p101e"] = "yuv420p10le",
+    ["std.me.m.eql"] = "std.mem.eql",
   },
   swift = {
     ["pointtee"] = "pointee",

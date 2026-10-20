@@ -70,6 +70,7 @@ vim.g.switch_custom_definitions = vim.g.switch_custom_definitions or {
   { "Estrogen", "Progesterone" },
   { "estrogen", "progesterone" },
   { "numerator", "denominator" },
+  { "wide", "tall" },
 }
 
 local ft_defaults = {
