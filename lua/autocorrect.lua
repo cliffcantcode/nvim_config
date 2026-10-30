@@ -100,6 +100,8 @@ M.replacements = {
   ["Vidoe"] = "Video",
   ["Loundness"] = "Loudness",
   ["loundness"] = "loudness",
+  ["tokeniezr"] = "tokenizer",
+  ["tokenzier"] = "tokenizer",
 }
 
 M.filetype_replacements = {
