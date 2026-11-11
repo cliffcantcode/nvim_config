@@ -102,6 +102,14 @@ M.replacements = {
   ["loundness"] = "loudness",
   ["tokeniezr"] = "tokenizer",
   ["tokenzier"] = "tokenizer",
+  ["tokenzier"] = "tokenizer",
+  ["processsing"] = "processing",
+  ["systme"] = "system",
+  ["attribue"] = "attribute",
+  ["closeing"] = "closing",
+  ["acknoledge"] = "acknowledge",
+  ["Documnet"] = "Document",
+  ["containter"] = "container",
 }
 
 M.filetype_replacements = {
